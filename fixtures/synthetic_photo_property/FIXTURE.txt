@@ -1,0 +1,1 @@
+synthetic/test fixture — not physical benchmark ground truth

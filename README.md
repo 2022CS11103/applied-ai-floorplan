@@ -33,6 +33,8 @@ python run.py repeat --capture single_room/c00a170fe1 --out runs/repeat_before -
 
 Video on a LiDAR bundle ignores the depth images and uses the metric poses. Frames are read in order, because seeking the mp4 often returns the wrong picture. On this sample the cloud is denser than the old few-hundred-point triangulation, and the plan stays degraded when those points still do not close a room. The JSON then carries `degraded_reasons`. That refusal is the result. The video wall-length gate stays blocked without a tape.
 
+Photos are one folder of 2–8 stills per room. A property is the parent of those folders. Rooms are stitched only where the floor polygons share an edge; a handwritten adjacency file is ignored, and overlapping floors are rejected. There is no iPhone 15+ photo capture in this repo, so the checked property is `fixtures/synthetic_photo_property`. That folder is a synthetic test fixture, not physical ground truth. The photo gates (footprint ±8%, wall lengths ±8%, adjacency on a real capture) stay blocked without a tape.
+
 ## Output
 
 `runs/<name>/plan.json` follows `schema/floorplan.schema.json`. `plan.png` is the drawing. Lengths are metres.

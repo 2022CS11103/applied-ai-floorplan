@@ -1,0 +1,6 @@
+capture: synthetic_photo_property
+tier: photo
+status: ok
+rooms: 4
+reasons: none
+synthetic/test fixture — not physical benchmark ground truth

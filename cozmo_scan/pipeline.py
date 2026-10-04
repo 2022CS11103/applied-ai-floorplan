@@ -14,7 +14,7 @@ from .capture import discover, imu_gravity_g
 from .damage import colorize_lidar, concealed_flags, detect_on_points, scope_items
 from .fuse import align_floor, fuse_lidar
 from .layout import build_layout, footprint_area, layout_to_dict
-from .reconstruct import VIDEO_REASONS, fuse_video, load_photo_cloud
+from .reconstruct import VIDEO_REASONS, fuse_video
 from .render import render_plan
 
 
@@ -40,6 +40,10 @@ def run_one(
     floor_anchor: bool = True,
     loop: bool = True,
 ) -> dict:
+    if tier == "photo":
+        from .photo import run_photo
+
+        return run_photo(capture_path, out_dir, endpoint_mode=endpoint_mode)
     t0 = time.perf_counter()
     capture = discover(capture_path)
     timing = {}
@@ -55,11 +59,6 @@ def run_one(
         if _video_stops_early(cloud):
             timing["reconstruct_s"] = round(time.perf_counter() - t, 3)
             return _emit_video_without_layout(capture, cloud, out_dir, endpoint_mode, floor_anchor, timing, t0)
-    elif tier == "photo":
-        if capture.kind == "photo_property":
-            return _run_property(capture.root, out_dir, endpoint_mode)
-        folder = capture.root
-        cloud = load_photo_cloud(folder, capture if capture.K_rgb is not None else None)
     else:
         raise RuntimeError(f"unknown tier {tier}")
     timing["reconstruct_s"] = round(time.perf_counter() - t, 3)
@@ -243,134 +242,6 @@ def _emit_video_without_layout(capture, cloud, out_dir, endpoint_mode, floor_anc
     render_plan(document, out_dir / "plan.png")
     _write_summary(document, out_dir / "summary.txt")
     return document
-
-
-def _run_property(root: Path, out_dir: Path, endpoint_mode: str) -> dict:
-    """Photo-tier whole-property stitch.
-
-    Each subfolder is one room of stills. adjacency.json is the sketch a
-    non-engineer fills in (which doorway joins which rooms). The stills
-    are never aligned with a depth map. Rooms are placed by that sketch:
-    the linked wall of the next room is set against the linked wall of the
-    previous one. This is the photo-tier stitch, and it is only as good as
-    the sketch.
-    """
-    spec = json.loads((root / "adjacency.json").read_text(encoding="utf-8"))
-    placed = []
-    documents = []
-    for entry in spec["rooms"]:
-        folder = root / entry["folder"]
-        cloud = load_photo_cloud(folder, None)
-        aligned = align_floor(cloud, enable_anchor=True, enable_loop=False)
-        layout = build_layout(aligned["xyz"], tier="photo", endpoint_mode=endpoint_mode)
-        prop = layout_to_dict(layout, "photo")
-        documents.append((entry["id"], prop, cloud.meta))
-        placed.append(entry["id"])
-
-    # Translate later rooms so a declared link sits on the requested side.
-    # If a room failed to close, it is omitted rather than drawn at a guess.
-    rooms = []
-    for rid, prop, meta in documents:
-        if not prop["rooms"]:
-            continue
-        room = prop["rooms"][0]
-        room["id"] = rid
-        room["scale_meta"] = {k: meta.get(k) for k in ("scale", "scale_source", "degraded")}
-        rooms.append(room)
-    rooms = _place_by_sketch(rooms, spec.get("links", []))
-    adjacencies = [
-        {"a": link["a"], "b": link["b"], "kind": link.get("via", "door"), "side": link.get("side")}
-        for link in spec.get("links", [])
-    ]
-    document = {
-        "schema_version": "1.0",
-        "pipeline_version": __version__,
-        "status": "ok" if rooms else "degraded",
-        "capture_id": root.name,
-        "tier": "photo",
-        "units": "meters",
-        "capture_kind": "photo_property",
-        "source": "photo_sfm_plus_sketch",
-        "endpoint_mode": endpoint_mode,
-        "property": {"rooms": rooms, "adjacencies": adjacencies, "footprint_area_m2": None},
-        "scope_line_items": [],
-        "concealed_damage": [],
-        "notes": [
-            "Photo rooms are scaled by the 1.40 m camera-height prior independently.",
-            "Adjacency is the sketch in adjacency.json, not a geometric match.",
-        ],
-        "drift": {
-            "method": ["not applicable: photo rooms do not share a trajectory"],
-            "footprint_area_m2_anchor_on": None,
-            "footprint_area_m2_anchor_off": None,
-        },
-        "quality": {},
-        "timing_s": {},
-    }
-    if rooms:
-        areas = [r["floor_area_m2"]["value"] for r in rooms]
-        document["property"]["footprint_area_m2"] = round(float(sum(areas)), 4)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "plan.json").write_text(json.dumps(_jsonable(document), indent=2), encoding="utf-8")
-    render_plan(document, out_dir / "plan.png")
-    _write_summary(document, out_dir / "summary.txt")
-    return document
-
-
-def _place_by_sketch(rooms: list[dict], links: list[dict]) -> list[dict]:
-    by_id = {r["id"]: r for r in rooms}
-    if not rooms:
-        return rooms
-    placed = {rooms[0]["id"]}
-    for link in links:
-        a, b = link.get("a"), link.get("b")
-        if a not in by_id or b not in by_id:
-            continue
-        if b in placed and a in placed:
-            continue
-        if a not in placed and b in placed:
-            a, b = b, a
-        if a not in placed:
-            continue
-        side = link.get("side", "east")
-        _park(by_id[a], by_id[b], side)
-        placed.add(b)
-    return list(by_id.values())
-
-
-def _park(anchor: dict, other: dict, side: str) -> None:
-    """Move `other` so it sits just outside `anchor` on the named side."""
-    ap = np.array(anchor["polygon_m"], dtype=float)
-    op = np.array(other["polygon_m"], dtype=float)
-    ac = ap.mean(0)
-    oc = op.mean(0)
-    a_min, a_max = ap.min(0), ap.max(0)
-    o_min, o_max = op.min(0), op.max(0)
-    gap = 0.15  # wall thickness we do not pretend to have measured from photos
-    shift = np.zeros(2)
-    if side == "east":
-        shift[0] = (a_max[0] + gap) - o_min[0]
-        shift[1] = ac[1] - oc[1]
-    elif side == "west":
-        shift[0] = (a_min[0] - gap) - o_max[0]
-        shift[1] = ac[1] - oc[1]
-    elif side == "north":
-        shift[1] = (a_max[1] + gap) - o_min[1]
-        shift[0] = ac[0] - oc[0]
-    else:  # south
-        shift[1] = (a_min[1] - gap) - o_max[1]
-        shift[0] = ac[0] - oc[0]
-
-    def move_poly(poly, s):
-        return (np.array(poly, dtype=float) + s).tolist()
-
-    other["polygon_m"] = move_poly(op, shift)
-    for wall in other["walls"]:
-        wall["p0_m"] = (np.array(wall["p0_m"]) + shift).tolist()
-        wall["p1_m"] = (np.array(wall["p1_m"]) + shift).tolist()
-    for dmg in other.get("damage", []):
-        if "centroid_m" in dmg:
-            dmg["centroid_m"] = (np.array(dmg["centroid_m"]) + shift).tolist()
 
 
 def repeatability(capture_path: Path, out_dir: Path, endpoint_mode: str) -> dict:

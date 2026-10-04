@@ -342,9 +342,36 @@ def _dump_frames(video: Path, out_dir: Path, count: int) -> list[Path]:
     return paths
 
 
+def _empty_photo(reasons: list[str], **meta) -> Cloud:
+    ordered = [r for r in ("missing_images", "low_texture", "weak_overlap", "insufficient_points", "scale_unavailable") if r in reasons]
+    return Cloud(
+        xyz=np.zeros((0, 3), dtype=np.float32),
+        frame_index=np.zeros((0,), dtype=np.int32),
+        source="photo_sfm",
+        meta={
+            "points": 0,
+            "degraded": True,
+            "reconstruction_reasons": ordered,
+            "scale": None,
+            "scale_source": None,
+            "scale_estimated": True,
+            **meta,
+        },
+    )
+
+
 def fuse_photos(paths: list[Path], capture: Capture | None = None, source: str = "photo_sfm") -> Cloud:
+    """Sequential SfM. Scale is the 1.40 m camera-height prior, not a tape.
+
+    Fewer than two readable stills, a blank wall, or a failed floor plane
+    comes back as an empty or unscaled cloud with reconstruction_reasons.
+    The caller writes a degraded plan instead of raising.
+    """
+    offered = len(paths)
+    if offered > 8:
+        paths = list(paths[:8])
     if len(paths) < 2:
-        raise RuntimeError("photo tier needs at least 2 stills")
+        return _empty_photo(["missing_images"], images=offered, images_used=len(paths))
     images = []
     for p in paths:
         bgr = cv2.imread(str(p))
@@ -352,7 +379,7 @@ def fuse_photos(paths: list[Path], capture: Capture | None = None, source: str =
             continue
         images.append((p, bgr))
     if len(images) < 2:
-        raise RuntimeError("could not read photo stills")
+        return _empty_photo(["missing_images"], images=offered, images_used=len(images))
     h, w = images[0][1].shape[:2]
     if capture is not None and capture.K_rgb is not None:
         K = capture.K_rgb.copy()
@@ -423,18 +450,54 @@ def fuse_photos(paths: list[Path], capture: Capture | None = None, source: str =
             cloud_xyz.append(Xw)
             cloud_f.append(i)
 
+    reasons: list[str] = []
+    kp_counts = [0 if kp is None else len(kp) for kp, _, _ in feats]
+    median_kp = float(np.median(kp_counts)) if kp_counts else 0.0
+    if median_kp < 40:
+        reasons.append("low_texture")
+    matched_pairs = 0
+    for i in range(len(feats) - 1):
+        des0, des1 = feats[i][1], feats[i + 1][1]
+        if des0 is None or des1 is None or len(feats[i][0] or []) < 20 or len(feats[i + 1][0] or []) < 20:
+            continue
+        if len(bf.match(des0, des1)) >= 40:
+            matched_pairs += 1
+    if matched_pairs == 0:
+        reasons.append("weak_overlap")
     if len(cloud_xyz) < 60:
-        raise RuntimeError(f"photo SfM kept {len(cloud_xyz)} points; the stills may not overlap")
+        reasons.append("insufficient_points")
+        return _empty_photo(
+            reasons,
+            images=offered,
+            images_used=len(images),
+            points_raw=int(len(cloud_xyz)),
+            median_keypoints=round(median_kp, 1),
+        )
 
     xyz = np.asarray(cloud_xyz, dtype=np.float64)
     cams = np.asarray(t_wc, dtype=np.float64)
     scaled, scale_meta = scale_to_camera_height(xyz, cams, R_wc)
+    if scale_meta.get("degraded"):
+        reasons.append("scale_unavailable")
+    scale_meta = dict(scale_meta)
+    scale_meta["scale_estimated"] = True
+    if scale_meta.get("scale_source") and not scale_meta.get("degraded"):
+        scale_meta["scale_source"] = str(scale_meta["scale_source"]) + "_estimated_not_tape"
+    ordered = [r for r in ("low_texture", "weak_overlap", "insufficient_points", "scale_unavailable") if r in reasons]
     return Cloud(
         xyz=scaled.astype(np.float32),
         frame_index=np.asarray(cloud_f, dtype=np.int32),
         colors=np.asarray(cloud_rgb, dtype=np.uint8),
         source=source,
-        meta={"points": int(len(scaled)), "images": len(images), **scale_meta},
+        meta={
+            "points": int(len(scaled)),
+            "images": offered,
+            "images_used": len(images),
+            "median_keypoints": round(median_kp, 1),
+            "degraded": bool(ordered),
+            "reconstruction_reasons": ordered,
+            **scale_meta,
+        },
     )
 
 

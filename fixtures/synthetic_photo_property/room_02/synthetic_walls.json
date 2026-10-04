@@ -1,0 +1,9 @@
+{
+  "synthetic_fixture": true,
+  "label": "synthetic/test fixture \u2014 not physical benchmark ground truth",
+  "x0": 5.4,
+  "z0": 0.0,
+  "x1": 9.0,
+  "z1": 3.2,
+  "height_m": 2.5
+}
