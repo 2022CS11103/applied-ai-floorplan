@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local/floorplan.schema.json",
+  "title": "Cozmo floor plan",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "capture_id",
+    "tier",
+    "units",
+    "status",
+    "property",
+    "scope_line_items",
+    "concealed_damage",
+    "drift"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "tier": {"enum": ["lidar", "video", "photo"]},
+    "units": {"const": "meters"},
+    "status": {"enum": ["ok", "degraded"]},
+    "property": {
+      "type": "object",
+      "required": ["rooms", "adjacencies"],
+      "properties": {
+        "rooms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "polygon_m", "floor_area_m2", "walls", "ceiling_observed"],
+            "properties": {
+              "floor_area_m2": {"$ref": "#/$defs/measurement"},
+              "walls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "length_m", "p0_m", "p1_m", "openings"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "measurement": {
+      "type": "object",
+      "required": ["value", "sigma", "ci95_low", "ci95_high"]
+    }
+  }
+}
