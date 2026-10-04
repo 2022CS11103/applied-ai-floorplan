@@ -1,9 +1,8 @@
 """Video and photo tiers.
 
-Video, when the logger recorded metric VIO poses, triangulates RGB
-features with those poses and never reads a depth image. Scale is the
-VIO scale. The interval is wider than LiDAR because a textureless wall
-simply does not produce points.
+Video triangulates RGB features with the logger's metric poses and never
+reads a depth image. Scale stays the pose scale. A walk without usable
+poses is marked degraded; it does not borrow the photo height prior.
 
 Photo stills have no poses. A short sequential SfM recovers shape, and
 scale comes from the capture protocol: the phone is held at 1.40 m, and
@@ -21,7 +20,12 @@ import numpy as np
 
 from .capture import Capture, list_photo_paths
 from .fuse import Cloud
-from .geometry import backproject, quat_to_matrix, ransac_plane
+from .geometry import backproject, quat_to_matrix, ransac_plane, voxel_downsample
+
+
+VIDEO_REASONS = ("low_texture", "weak_overlap", "insufficient_points", "no_room_closure", "missing_pose")
+# Below this, layout cannot build a plan. The cloud is still returned.
+_MIN_CLOUD = 200
 
 
 CAMERA_HEIGHT_M = 1.40
@@ -44,94 +48,267 @@ def _projection(K: np.ndarray, R_wc: np.ndarray, t_wc: np.ndarray) -> np.ndarray
     return K @ np.hstack([R_cw, t_cw.reshape(3, 1)])
 
 
-def fuse_video(capture: Capture, max_pairs: int = 40) -> Cloud:
+def _pose_usable(pose) -> bool:
+    if not np.isfinite(pose.t).all() or not np.isfinite(pose.q).all():
+        return False
+    return float(np.linalg.norm(pose.q)) > 0.5
+
+
+def _empty_video_cloud(capture: Capture, **meta) -> Cloud:
+    return Cloud(
+        xyz=np.zeros((0, 3), dtype=np.float32),
+        frame_index=np.zeros((0,), dtype=np.int32),
+        source="video_triangulation",
+        meta={"points": 0, "poses": len(capture.poses), "degraded": True, **meta},
+    )
+
+
+def _K_for_pose(capture: Capture, pose, width: int, height: int) -> np.ndarray:
+    """Intrinsics of this frame, scaled if the picture is not the logged size."""
+    sx = width / float(capture.rgb_size[0])
+    sy = height / float(capture.rgb_size[1])
+    fx = float(pose.fx) if pose.fx else 0.0
+    fy = float(pose.fy) if pose.fy else 0.0
+    cx = float(pose.cx) if pose.cx else 0.0
+    cy = float(pose.cy) if pose.cy else 0.0
+    if fx <= 1.0 or fy <= 1.0:
+        K = _K_from_capture(capture, width, height)
+        return K
+    return np.array(
+        [[fx * sx, 0.0, cx * sx], [0.0, fy * sy, cy * sy], [0.0, 0.0, 1.0]],
+        dtype=np.float64,
+    )
+
+
+def _select_pose_indices(capture: Capture, min_baseline: float = 0.18, limit: int = 90) -> list[int]:
+    """Pose rows spaced along the walk so each step has some parallax."""
+    chosen = []
+    last = None
+    for i, pose in enumerate(capture.poses):
+        if not _pose_usable(pose):
+            continue
+        if last is None:
+            chosen.append(i)
+            last = pose.t
+            continue
+        if float(np.linalg.norm(pose.t - last)) >= min_baseline:
+            chosen.append(i)
+            last = pose.t
+    if len(chosen) > limit:
+        keep = np.linspace(0, len(chosen) - 1, limit).astype(int)
+        chosen = [chosen[int(i)] for i in keep]
+    return chosen
+
+
+def _frame_number(pose) -> int | None:
+    try:
+        return int(str(pose.frame).strip())
+    except ValueError:
+        return None
+
+
+def fuse_video(capture: Capture, max_frames: int = 90) -> Cloud:
+    """Triangulate the walk with the metric poses.
+
+    Frames are read in order. Seeking an mp4 by frame number often returns
+    a different picture than the pose row, and those pairs do not triangulate.
+    """
     video = capture.video_path
+    usable = [p for p in capture.poses if _pose_usable(p)]
+    if len(capture.poses) < 5 and len(usable) < 5:
+        return _empty_video_cloud(
+            capture,
+            reconstruction_reasons=["missing_pose"],
+            video_present=video is not None,
+        )
+    if len(usable) < 5:
+        return _empty_video_cloud(
+            capture,
+            reconstruction_reasons=[],
+            pose_error="invalid_pose",
+            video_present=video is not None,
+        )
     if video is None:
-        raise RuntimeError(f"no video in {capture.root}")
-    if len(capture.poses) < 5:
-        # No metric poses: treat a subsample of frames as a photo sequence.
-        paths = _dump_frames(video, capture.root / "_video_frames", count=8)
-        return fuse_photos(paths, capture, source="video_unscaled_sfm")
+        return _empty_video_cloud(capture, reconstruction_reasons=[], video_error="no_video")
+
+    chosen = _select_pose_indices(capture, limit=max_frames)
+    wanted = {}
+    for idx in chosen:
+        number = _frame_number(capture.poses[idx])
+        if number is not None:
+            wanted[number] = idx
+    if len(wanted) < 5:
+        return _empty_video_cloud(capture, reconstruction_reasons=[], pose_error="invalid_pose")
 
     cap = cv2.VideoCapture(str(video))
     if not cap.isOpened():
         raise RuntimeError(f"could not open {video}")
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    K = _K_from_capture(capture, width, height)
-    n = len(capture.poses)
-    step = max(1, n // (max_pairs + 1))
-    indices = list(range(0, n, step))[: max_pairs + 1]
-    orb = cv2.ORB_create(2000)
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-
+    input_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # Features on a half-size image, coordinates back in the full picture
+    # so they match the logged intrinsics.
+    detect_scale = 0.5
+    orb = cv2.ORB_create(nfeatures=3000, fastThreshold=7)
     frames = []
-    for idx in indices:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, int(capture.poses[idx].frame))
+    keypoint_counts = []
+    frame_no = 0
+    while True:
         ok, bgr = cap.read()
         if not ok or bgr is None:
+            break
+        idx = wanted.get(frame_no)
+        frame_no += 1
+        if idx is None:
             continue
-        gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
+        small = cv2.resize(bgr, None, fx=detect_scale, fy=detect_scale, interpolation=cv2.INTER_AREA)
+        gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
         kp, des = orb.detectAndCompute(gray, None)
-        frames.append((idx, bgr, kp, des))
+        n_kp = 0 if kp is None else len(kp)
+        keypoint_counts.append(n_kp)
+        if des is None or n_kp < 20:
+            continue
+        for point in kp:
+            point.pt = (point.pt[0] / detect_scale, point.pt[1] / detect_scale)
+        frames.append((idx, small, kp, des))
     cap.release()
 
-    points = []
-    colors = []
-    frame_ids = []
-    for (i0, bgr0, kp0, des0), (i1, bgr1, kp1, des1) in zip(frames, frames[1:]):
-        if des0 is None or des1 is None or len(kp0) < 20 or len(kp1) < 20:
-            continue
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    points: list[np.ndarray] = []
+    colors: list[tuple[int, int, int]] = []
+    frame_ids: list[int] = []
+    pairs_attempted = 0
+    pairs_used = 0
+    weak_matches = 0
+    bad_baseline = 0
+    pair_list = [(i, i + 1) for i in range(len(frames) - 1)]
+    pair_list += [(i, i + 2) for i in range(len(frames) - 2)]
+    for a, b in pair_list:
+        i0, small0, kp0, des0 = frames[a]
+        i1, small1, kp1, des1 = frames[b]
+        pairs_attempted += 1
         matches = bf.match(des0, des1)
-        matches = sorted(matches, key=lambda m: m.distance)[:400]
-        if len(matches) < 30:
+        matches = [m for m in matches if m.distance <= 56]
+        matches = sorted(matches, key=lambda m: m.distance)[:700]
+        if len(matches) < 25:
+            weak_matches += 1
             continue
         p0 = capture.poses[i0]
         p1 = capture.poses[i1]
         baseline = float(np.linalg.norm(p1.t - p0.t))
-        if baseline < 0.05 or baseline > 0.8:
+        if baseline < 0.08 or baseline > 1.3:
+            bad_baseline += 1
             continue
-        pts0 = np.float32([kp0[m.queryIdx].pt for m in matches])
-        pts1 = np.float32([kp1[m.trainIdx].pt for m in matches])
-        R0 = quat_to_matrix(p0.q)
-        R1 = quat_to_matrix(p1.q)
-        P0 = _projection(K, R0, p0.t)
-        P1 = _projection(K, R1, p1.t)
-        homo = cv2.triangulatePoints(P0, P1, pts0.T, pts1.T)
-        X = (homo[:3] / homo[3]).T
-        # positive depth in both cameras and a sane room range
-        for k, Xw in enumerate(X):
-            if not np.isfinite(Xw).all():
-                continue
-            z0 = _cam_z(Xw, R0, p0.t)
-            z1 = _cam_z(Xw, R1, p1.t)
-            if z0 < 0.3 or z1 < 0.3 or z0 > 6 or z1 > 6:
-                continue
-            u0 = _project(Xw, K, R0, p0.t)
-            if np.linalg.norm(u0 - pts0[k]) > 3.0:
-                continue
-            points.append(Xw)
-            x, y = int(pts0[k, 0]), int(pts0[k, 1])
-            if 0 <= x < bgr0.shape[1] and 0 <= y < bgr0.shape[0]:
-                b, g, r = bgr0[y, x]
-                colors.append((r, g, b))
-            else:
-                colors.append((0, 0, 0))
-            frame_ids.append(i0)
-    if len(points) < 80:
-        raise RuntimeError(
-            f"video triangulation kept {len(points)} points. The walk may be too dark or too blank to survey from RGB alone."
-        )
-    xyz = np.asarray(points, dtype=np.float32)
-    cols = np.asarray(colors, dtype=np.uint8)
-    fidx = np.asarray(frame_ids, dtype=np.int32)
+        kept = _triangulate_pair(capture, p0, p1, kp0, kp1, matches, small0, width, height)
+        if not kept:
+            continue
+        pairs_used += 1
+        xyz_k, rgb_k = kept
+        points.extend(xyz_k)
+        colors.extend(rgb_k)
+        frame_ids.extend([i0] * len(xyz_k))
+
+    raw_count = len(points)
+    if raw_count:
+        xyz = np.asarray(points, dtype=np.float32)
+        cols = np.asarray(colors, dtype=np.uint8)
+        fidx = np.asarray(frame_ids, dtype=np.int32)
+        xyz, [cols, fidx] = voxel_downsample(xyz, 0.03, [cols, fidx])
+    else:
+        xyz = np.zeros((0, 3), dtype=np.float32)
+        cols = np.zeros((0, 3), dtype=np.uint8)
+        fidx = np.zeros((0,), dtype=np.int32)
+
+    median_kp = float(np.median(keypoint_counts)) if keypoint_counts else 0.0
+    low_texture = bool(keypoint_counts) and (median_kp < 80 or np.mean(np.array(keypoint_counts) < 25) > 0.45)
+    weak_overlap = pairs_attempted == 0 or pairs_used < 3 or (
+        pairs_attempted >= 4 and pairs_used / pairs_attempted < 0.3
+    )
+    reasons: list[str] = []
+    if len(xyz) < _MIN_CLOUD:
+        if low_texture:
+            reasons.append("low_texture")
+        if weak_overlap:
+            reasons.append("weak_overlap")
+        reasons.append("insufficient_points")
+    midband = 0
+    if len(xyz):
+        floor = float(np.percentile(xyz[:, 1], 10))
+        midband = int(((xyz[:, 1] > floor + 0.35) & (xyz[:, 1] < floor + 1.7)).sum())
     return Cloud(
         xyz=xyz,
         frame_index=fidx,
-        colors=cols,
+        colors=cols if len(cols) else None,
         source="video_triangulation",
-        meta={"points": int(len(xyz)), "pairs": len(frames) - 1, "poses": n},
+        meta={
+            "points": int(len(xyz)),
+            "points_raw": int(raw_count),
+            "points_after_voxel": int(len(xyz)),
+            "midband_points": int(midband),
+            "input_frames": int(input_frames),
+            "frames_decoded": int(frame_no),
+            "frames_used": int(len(frames)),
+            "median_keypoints": round(median_kp, 1),
+            "pairs_attempted": int(pairs_attempted),
+            "pairs_used": int(pairs_used),
+            "weak_match_pairs": int(weak_matches),
+            "bad_baseline_pairs": int(bad_baseline),
+            "poses": len(capture.poses),
+            "usable_poses": len(usable),
+            "degraded": bool(reasons),
+            "reconstruction_reasons": reasons,
+        },
     )
+
+
+def _triangulate_pair(capture, p0, p1, kp0, kp1, matches, small0, width, height):
+    """Return (points, colors) that agree with both metric poses."""
+    pts0 = np.float64([kp0[m.queryIdx].pt for m in matches])
+    pts1 = np.float64([kp1[m.trainIdx].pt for m in matches])
+    K0 = _K_for_pose(capture, p0, width, height)
+    K1 = _K_for_pose(capture, p1, width, height)
+    R0 = quat_to_matrix(p0.q)
+    R1 = quat_to_matrix(p1.q)
+    P0 = _projection(K0, R0, p0.t)
+    P1 = _projection(K1, R1, p1.t)
+    homo = cv2.triangulatePoints(P0, P1, pts0.T.astype(np.float64), pts1.T.astype(np.float64))
+    w = homo[3]
+    good_w = np.abs(w) > 1e-8
+    X = np.full((len(matches), 3), np.nan)
+    X[good_w] = (homo[:3, good_w] / w[good_w]).T
+    finite = np.isfinite(X).all(axis=1)
+    if not finite.any():
+        return None
+    Xc0 = (X - p0.t) @ R0
+    Xc1 = (X - p1.t) @ R1
+    z0 = Xc0[:, 2]
+    z1 = Xc1[:, 2]
+    depth_ok = finite & (z0 > 0.35) & (z1 > 0.35) & (z0 < 6.0) & (z1 < 6.0)
+    if not depth_ok.any():
+        return None
+    u0 = (K0 @ Xc0.T)[:2] / np.clip(z0, 1e-6, None)
+    u1 = (K1 @ Xc1.T)[:2] / np.clip(z1, 1e-6, None)
+    err0 = np.linalg.norm(u0.T - pts0, axis=1)
+    err1 = np.linalg.norm(u1.T - pts1, axis=1)
+    ray0 = X - p0.t
+    ray1 = X - p1.t
+    cos = np.sum(ray0 * ray1, axis=1) / np.clip(np.linalg.norm(ray0, axis=1) * np.linalg.norm(ray1, axis=1), 1e-8, None)
+    parallax = np.degrees(np.arccos(np.clip(cos, -1.0, 1.0)))
+    keep = depth_ok & (err0 < 6.0) & (err1 < 6.0) & (parallax > 0.8)
+    if not keep.any():
+        return None
+    xyz = X[keep]
+    cols = []
+    sh, sw = small0.shape[:2]
+    for x_full, y_full in pts0[keep]:
+        x = int(round(x_full * sw / width))
+        y = int(round(y_full * sh / height))
+        if 0 <= x < sw and 0 <= y < sh:
+            b, g, r = small0[y, x]
+            cols.append((int(r), int(g), int(b)))
+        else:
+            cols.append((0, 0, 0))
+    return xyz, cols
 
 
 def _cam_z(Xw, R_wc, t_wc) -> float:

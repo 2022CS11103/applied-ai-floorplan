@@ -31,7 +31,7 @@ python run.py repeat --capture single_room/c00a170fe1 --out runs/repeat_after --
 python run.py repeat --capture single_room/c00a170fe1 --out runs/repeat_before --endpoints observed
 ```
 
-Video on a LiDAR bundle ignores the depth images. On this sample it triangulates a few hundred points and refuses to draw a room. That refusal is the result.
+Video on a LiDAR bundle ignores the depth images and uses the metric poses. Frames are read in order, because seeking the mp4 often returns the wrong picture. On this sample the cloud is denser than the old few-hundred-point triangulation, and the plan stays degraded when those points still do not close a room. The JSON then carries `degraded_reasons`. That refusal is the result. The video wall-length gate stays blocked without a tape.
 
 ## Output
 

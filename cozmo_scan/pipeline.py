@@ -14,7 +14,7 @@ from .capture import discover, imu_gravity_g
 from .damage import colorize_lidar, concealed_flags, detect_on_points, scope_items
 from .fuse import align_floor, fuse_lidar
 from .layout import build_layout, footprint_area, layout_to_dict
-from .reconstruct import fuse_video, load_photo_cloud
+from .reconstruct import VIDEO_REASONS, fuse_video, load_photo_cloud
 from .render import render_plan
 
 
@@ -52,6 +52,9 @@ def run_one(
         cloud = fuse_lidar(capture)
     elif tier == "video":
         cloud = fuse_video(capture)
+        if _video_stops_early(cloud):
+            timing["reconstruct_s"] = round(time.perf_counter() - t, 3)
+            return _emit_video_without_layout(capture, cloud, out_dir, endpoint_mode, floor_anchor, timing, t0)
     elif tier == "photo":
         if capture.kind == "photo_property":
             return _run_property(capture.root, out_dir, endpoint_mode)
@@ -94,8 +97,11 @@ def run_one(
 
     flags = concealed_flags(prop["rooms"])
     items = scope_items(prop["rooms"])
-    degraded = bool(cloud.meta.get("degraded"))
+    degraded_reasons = video_degraded_reasons(cloud, prop["notes"], len(prop["rooms"])) if tier == "video" else []
+    degraded = bool(cloud.meta.get("degraded")) or bool(degraded_reasons)
     status = "degraded" if degraded or not prop["rooms"] else "ok"
+    if tier == "video" and not prop["rooms"]:
+        status = "degraded"
     if not prop["rooms"]:
         notes.append("layout did not close a room; see layout notes")
     notes.extend(prop["notes"])
@@ -148,10 +154,92 @@ def run_one(
         "notes": notes,
     }
     document["timing_s"]["total_s"] = round(time.perf_counter() - t0, 3)
+    if tier == "video":
+        document["degraded_reasons"] = degraded_reasons
 
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "plan.json"
     out_path.write_text(json.dumps(_jsonable(document), indent=2), encoding="utf-8")
+    render_plan(document, out_dir / "plan.png")
+    _write_summary(document, out_dir / "summary.txt")
+    return document
+
+
+def _video_stops_early(cloud) -> bool:
+    """No points to lay out: missing or unusable poses, or an empty triangulation."""
+    meta = cloud.meta or {}
+    if meta.get("pose_error") or meta.get("video_error"):
+        return True
+    reasons = meta.get("reconstruction_reasons") or []
+    if "missing_pose" in reasons:
+        return True
+    return len(cloud.xyz) == 0
+
+
+def video_degraded_reasons(cloud, layout_notes: list[str], n_rooms: int) -> list[str]:
+    """Reasons that were actually observed. Order follows the allowed list."""
+    meta = cloud.meta or {}
+    found = set(meta.get("reconstruction_reasons") or [])
+    if meta.get("pose_error") == "invalid_pose":
+        # The pose rows exist but cannot be used. That is not a layout failure.
+        return []
+    notes = " ".join(layout_notes or [])
+    if n_rooms == 0 and len(cloud.xyz) > 0:
+        if "not enough wall points" in notes or "too few points" in notes:
+            found.add("insufficient_points")
+        found.add("no_room_closure")
+    return [reason for reason in VIDEO_REASONS if reason in found]
+
+
+def _emit_video_without_layout(capture, cloud, out_dir, endpoint_mode, floor_anchor, timing, t0) -> dict:
+    """Write a degraded plan when there is nothing honest to lay out."""
+    reasons = video_degraded_reasons(cloud, [], 0)
+    notes = []
+    if cloud.meta.get("pose_error"):
+        notes.append(cloud.meta["pose_error"])
+    if cloud.meta.get("video_error"):
+        notes.append(cloud.meta["video_error"])
+    if "missing_pose" in reasons:
+        notes.append("video has no usable metric poses")
+    for reason in reasons:
+        if reason not in notes:
+            notes.append(reason)
+    document = {
+        "schema_version": "1.0",
+        "pipeline_version": __version__,
+        "status": "degraded",
+        "degraded_reasons": reasons,
+        "capture_id": capture.capture_id,
+        "tier": "video",
+        "units": "meters",
+        "capture_kind": capture.kind,
+        "source": cloud.source,
+        "endpoint_mode": endpoint_mode,
+        "floor_anchor": floor_anchor,
+        "timing_s": {**timing, "total_s": round(time.perf_counter() - t0, 3)},
+        "quality": {k: v for k, v in cloud.meta.items() if not isinstance(v, np.ndarray)},
+        "drift": {
+            "method": ["not run: video produced no cloud"],
+            "floor_tilt_deg": None,
+            "floor_residual_m": None,
+            "chunk_floor_offsets_m": [],
+            "loop": {"fired": False, "reason": "disabled"},
+            "footprint_area_m2_anchor_on": 0.0,
+            "footprint_area_m2_anchor_off": 0.0,
+            "note": "No layout was built, so there is no floor anchor to compare.",
+        },
+        "property": {
+            "rooms": [],
+            "adjacencies": [],
+            "footprint_area_m2": 0.0,
+            "manhattan_theta_deg": 0.0,
+        },
+        "scope_line_items": [],
+        "concealed_damage": [],
+        "notes": notes,
+    }
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "plan.json").write_text(json.dumps(_jsonable(document), indent=2), encoding="utf-8")
     render_plan(document, out_dir / "plan.png")
     _write_summary(document, out_dir / "summary.txt")
     return document

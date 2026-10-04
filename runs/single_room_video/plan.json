@@ -10,28 +10,41 @@
   "endpoint_mode": "intersections",
   "floor_anchor": true,
   "timing_s": {
-    "reconstruct_s": 20.407,
-    "layout_s": 0.093,
-    "damage_s": 0.0,
-    "total_s": 20.588
+    "reconstruct_s": 53.224,
+    "layout_s": 0.357,
+    "damage_s": 0.002,
+    "total_s": 53.768
   },
   "quality": {
-    "points": 611,
-    "pairs": 40,
+    "points": 9688,
+    "points_raw": 26381,
+    "points_after_voxel": 9688,
+    "midband_points": 6177,
+    "input_frames": 1715,
+    "frames_decoded": 1714,
+    "frames_used": 72,
+    "median_keypoints": 1725.0,
+    "pairs_attempted": 141,
+    "pairs_used": 107,
+    "weak_match_pairs": 19,
+    "bad_baseline_pairs": 0,
     "poses": 1715,
+    "usable_poses": 1715,
+    "degraded": false,
+    "reconstruction_reasons": [],
     "imu_specific_force_g": 1.003,
-    "points_aligned": 611
+    "points_aligned": 9688
   },
   "drift": {
     "method": [
       "RANSAC floor-plane anchor",
       "per-chunk vertical floor shift"
     ],
-    "floor_tilt_deg": 13.714,
-    "floor_residual_m": 0.0059,
+    "floor_tilt_deg": 14.928,
+    "floor_residual_m": 0.0062,
     "chunk_floor_offsets_m": [
-      0.2475,
-      0.0017
+      -0.0484,
+      -0.0316
     ],
     "loop": {
       "fired": false,
@@ -45,13 +58,17 @@
     "rooms": [],
     "adjacencies": [],
     "footprint_area_m2": 0.0,
-    "manhattan_theta_deg": 0.0
+    "manhattan_theta_deg": 40.5
   },
   "scope_line_items": [],
   "concealed_damage": [],
   "notes": [
     "layout did not close a room; see layout notes",
     "vertical-column filter kept too little; falling back to a mid-height band",
-    "not enough wall points"
+    "manhattan theta 40.5 deg, vertical lines 1, horizontal lines 2",
+    "fewer than two walls in one direction; no closed room"
+  ],
+  "degraded_reasons": [
+    "no_room_closure"
   ]
 }

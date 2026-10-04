@@ -6,4 +6,5 @@ footprint anchor on 0.0 off 0.0
 notes:
   - layout did not close a room; see layout notes
   - vertical-column filter kept too little; falling back to a mid-height band
-  - not enough wall points
+  - manhattan theta 40.5 deg, vertical lines 1, horizontal lines 2
+  - fewer than two walls in one direction; no closed room
