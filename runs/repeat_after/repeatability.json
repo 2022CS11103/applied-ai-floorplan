@@ -1,0 +1,37 @@
+{
+  "capture_id": "c00a170fe1",
+  "endpoint_mode": "intersections",
+  "walls_compared": 2,
+  "walls_within_gate": 2,
+  "fraction": 1.0,
+  "worst_abs_delta_m": 0.0052,
+  "proxy": "even/odd frames of one walk, not two physical captures",
+  "rows": [
+    {
+      "room_a": 0,
+      "length_a_m": 2.3983,
+      "length_b_m": 2.4035,
+      "abs_delta_m": 0.0052,
+      "midpoint_distance_m": 0.0023,
+      "tolerance_m": 0.012,
+      "pass": true
+    },
+    {
+      "room_a": 1,
+      "length_a_m": 2.3983,
+      "length_b_m": 2.4035,
+      "abs_delta_m": 0.0052,
+      "midpoint_distance_m": 0.1114,
+      "tolerance_m": 0.012,
+      "pass": true
+    }
+  ],
+  "notes_even": [
+    "manhattan theta 23.5 deg, vertical lines 2, horizontal lines 4"
+  ],
+  "notes_odd": [
+    "manhattan theta 23.5 deg, vertical lines 2, horizontal lines 3"
+  ],
+  "rooms_even": 3,
+  "rooms_odd": 2
+}

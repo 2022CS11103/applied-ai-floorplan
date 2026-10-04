@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "pipeline_version": "1.0.0",
+  "status": "degraded",
+  "capture_id": "c00a170fe1",
+  "tier": "video",
+  "units": "meters",
+  "capture_kind": "lidar_bundle",
+  "source": "video_triangulation",
+  "endpoint_mode": "intersections",
+  "floor_anchor": true,
+  "timing_s": {
+    "reconstruct_s": 20.407,
+    "layout_s": 0.093,
+    "damage_s": 0.0,
+    "total_s": 20.588
+  },
+  "quality": {
+    "points": 611,
+    "pairs": 40,
+    "poses": 1715,
+    "imu_specific_force_g": 1.003,
+    "points_aligned": 611
+  },
+  "drift": {
+    "method": [
+      "RANSAC floor-plane anchor",
+      "per-chunk vertical floor shift"
+    ],
+    "floor_tilt_deg": 13.714,
+    "floor_residual_m": 0.0059,
+    "chunk_floor_offsets_m": [
+      0.2475,
+      0.0017
+    ],
+    "loop": {
+      "fired": false,
+      "reason": "disabled"
+    },
+    "footprint_area_m2_anchor_on": 0.0,
+    "footprint_area_m2_anchor_off": 0.0,
+    "note": "Anchor-on rotates the cloud onto the floor plane and shifts each quarter of the walk so its floor sits at zero. Anchor-off only subtracts a single floor height. Loop closure runs on the lidar tier and is recorded whether or not it fires."
+  },
+  "property": {
+    "rooms": [],
+    "adjacencies": [],
+    "footprint_area_m2": 0.0,
+    "manhattan_theta_deg": 0.0
+  },
+  "scope_line_items": [],
+  "concealed_damage": [],
+  "notes": [
+    "layout did not close a room; see layout notes",
+    "vertical-column filter kept too little; falling back to a mid-height band",
+    "not enough wall points"
+  ]
+}

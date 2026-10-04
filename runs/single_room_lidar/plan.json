@@ -1,0 +1,586 @@
+{
+  "schema_version": "1.0",
+  "pipeline_version": "1.0.0",
+  "status": "ok",
+  "capture_id": "c00a170fe1",
+  "tier": "lidar",
+  "units": "meters",
+  "capture_kind": "lidar_bundle",
+  "source": "lidar",
+  "endpoint_mode": "intersections",
+  "floor_anchor": true,
+  "timing_s": {
+    "reconstruct_s": 6.285,
+    "layout_s": 1.65,
+    "damage_s": 12.169,
+    "total_s": 20.221
+  },
+  "quality": {
+    "depth_frames_on_disk": 1715,
+    "depth_frames_used": 215,
+    "frame_stride": 8,
+    "pixel_stride": 3,
+    "points": 220041,
+    "imu_specific_force_g": 1.003,
+    "points_aligned": 220041
+  },
+  "drift": {
+    "method": [
+      "RANSAC floor-plane anchor",
+      "per-chunk vertical floor shift",
+      "loop closure checked and not applied"
+    ],
+    "floor_tilt_deg": 0.488,
+    "floor_residual_m": 0.0055,
+    "chunk_floor_offsets_m": [
+      0.0255,
+      -0.0013,
+      0.001,
+      -0.0238
+    ],
+    "loop": {
+      "fired": false,
+      "reason": "alignment is too large to be a loop; left poses unchanged",
+      "yaw_deg": -12.769,
+      "translation_m": [
+        3.663,
+        -2.63
+      ],
+      "rmse_before_m": 3.886,
+      "rmse_after_m": 1.337
+    },
+    "footprint_area_m2_anchor_on": 14.0004,
+    "footprint_area_m2_anchor_off": 10.9649,
+    "note": "Anchor-on rotates the cloud onto the floor plane and shifts each quarter of the walk so its floor sits at zero. Anchor-off only subtracts a single floor height. Loop closure runs on the lidar tier and is recorded whether or not it fires."
+  },
+  "property": {
+    "rooms": [
+      {
+        "id": "room_0",
+        "polygon_m": [
+          [
+            2.3011,
+            -3.3647
+          ],
+          [
+            4.5037,
+            -2.4069
+          ],
+          [
+            3.3255,
+            0.3028
+          ],
+          [
+            1.1228,
+            -0.6549
+          ]
+        ],
+        "floor_area_m2": {
+          "value": 7.0972,
+          "sigma": 0.1976,
+          "ci95_low": 6.7099,
+          "ci95_high": 7.4845
+        },
+        "ceiling_height_m": null,
+        "ceiling_observed": false,
+        "walls": [
+          {
+            "id": "room0_w0",
+            "length_m": {
+              "value": 2.4019,
+              "sigma": 0.0521,
+              "ci95_low": 2.2998,
+              "ci95_high": 2.5039
+            },
+            "height_m": null,
+            "p0_m": [
+              2.3011,
+              -3.3647
+            ],
+            "p1_m": [
+              4.5037,
+              -2.4069
+            ],
+            "support_points": 6069,
+            "openings": []
+          },
+          {
+            "id": "room0_w1",
+            "length_m": {
+              "value": 2.9549,
+              "sigma": 0.0523,
+              "ci95_low": 2.8524,
+              "ci95_high": 3.0573
+            },
+            "height_m": null,
+            "p0_m": [
+              4.5037,
+              -2.4069
+            ],
+            "p1_m": [
+              3.3255,
+              0.3028
+            ],
+            "support_points": 20146,
+            "openings": []
+          },
+          {
+            "id": "room0_w2",
+            "length_m": {
+              "value": 2.4019,
+              "sigma": 0.0392,
+              "ci95_low": 2.325,
+              "ci95_high": 2.4787
+            },
+            "height_m": null,
+            "p0_m": [
+              3.3255,
+              0.3028
+            ],
+            "p1_m": [
+              1.1228,
+              -0.6549
+            ],
+            "support_points": 6985,
+            "openings": []
+          },
+          {
+            "id": "room0_w3",
+            "length_m": {
+              "value": 2.9549,
+              "sigma": 0.0708,
+              "ci95_low": 2.8161,
+              "ci95_high": 3.0936
+            },
+            "height_m": null,
+            "p0_m": [
+              1.1228,
+              -0.6549
+            ],
+            "p1_m": [
+              2.3011,
+              -3.3647
+            ],
+            "support_points": 5140,
+            "openings": []
+          }
+        ],
+        "damage": []
+      },
+      {
+        "id": "room_1",
+        "polygon_m": [
+          [
+            1.1228,
+            -0.6549
+          ],
+          [
+            3.3255,
+            0.3028
+          ],
+          [
+            2.6526,
+            1.8504
+          ],
+          [
+            0.4499,
+            0.8926
+          ]
+        ],
+        "floor_area_m2": {
+          "value": 4.0532,
+          "sigma": 0.172,
+          "ci95_low": 3.716,
+          "ci95_high": 4.3903
+        },
+        "ceiling_height_m": null,
+        "ceiling_observed": false,
+        "walls": [
+          {
+            "id": "room1_w0",
+            "length_m": {
+              "value": 2.4019,
+              "sigma": 0.0392,
+              "ci95_low": 2.325,
+              "ci95_high": 2.4787
+            },
+            "height_m": null,
+            "p0_m": [
+              1.1228,
+              -0.6549
+            ],
+            "p1_m": [
+              3.3255,
+              0.3028
+            ],
+            "support_points": 6985,
+            "openings": []
+          },
+          {
+            "id": "room1_w1",
+            "length_m": {
+              "value": 1.6875,
+              "sigma": 0.0523,
+              "ci95_low": 1.5851,
+              "ci95_high": 1.7899
+            },
+            "height_m": null,
+            "p0_m": [
+              3.3255,
+              0.3028
+            ],
+            "p1_m": [
+              2.6526,
+              1.8504
+            ],
+            "support_points": 20146,
+            "openings": []
+          },
+          {
+            "id": "room1_w2",
+            "length_m": {
+              "value": 2.4019,
+              "sigma": 0.0667,
+              "ci95_low": 2.2711,
+              "ci95_high": 2.5326
+            },
+            "height_m": null,
+            "p0_m": [
+              2.6526,
+              1.8504
+            ],
+            "p1_m": [
+              0.4499,
+              0.8926
+            ],
+            "support_points": 8423,
+            "openings": []
+          },
+          {
+            "id": "room1_w3",
+            "length_m": {
+              "value": 1.6875,
+              "sigma": 0.0708,
+              "ci95_low": 1.5487,
+              "ci95_high": 1.8263
+            },
+            "height_m": null,
+            "p0_m": [
+              0.4499,
+              0.8926
+            ],
+            "p1_m": [
+              1.1228,
+              -0.6549
+            ],
+            "support_points": 5140,
+            "openings": []
+          }
+        ],
+        "damage": []
+      },
+      {
+        "id": "room_2",
+        "polygon_m": [
+          [
+            0.412,
+            0.98
+          ],
+          [
+            2.6146,
+            1.9377
+          ],
+          [
+            2.1415,
+            3.0259
+          ],
+          [
+            -0.0612,
+            2.0681
+          ]
+        ],
+        "floor_area_m2": {
+          "value": 2.85,
+          "sigma": 0.1509,
+          "ci95_low": 2.5542,
+          "ci95_high": 3.1459
+        },
+        "ceiling_height_m": null,
+        "ceiling_observed": false,
+        "walls": [
+          {
+            "id": "room2_w0",
+            "length_m": {
+              "value": 2.4019,
+              "sigma": 0.0667,
+              "ci95_low": 2.2711,
+              "ci95_high": 2.5326
+            },
+            "height_m": null,
+            "p0_m": [
+              0.412,
+              0.98
+            ],
+            "p1_m": [
+              2.6146,
+              1.9377
+            ],
+            "support_points": 8423,
+            "openings": []
+          },
+          {
+            "id": "room2_w1",
+            "length_m": {
+              "value": 1.1866,
+              "sigma": 0.0523,
+              "ci95_low": 1.0842,
+              "ci95_high": 1.289
+            },
+            "height_m": null,
+            "p0_m": [
+              2.6146,
+              1.9377
+            ],
+            "p1_m": [
+              2.1415,
+              3.0259
+            ],
+            "support_points": 20146,
+            "openings": []
+          },
+          {
+            "id": "room2_w2",
+            "length_m": {
+              "value": 2.4019,
+              "sigma": 0.0448,
+              "ci95_low": 2.314,
+              "ci95_high": 2.4898
+            },
+            "height_m": null,
+            "p0_m": [
+              2.1415,
+              3.0259
+            ],
+            "p1_m": [
+              -0.0612,
+              2.0681
+            ],
+            "support_points": 9860,
+            "openings": []
+          },
+          {
+            "id": "room2_w3",
+            "length_m": {
+              "value": 1.1866,
+              "sigma": 0.0708,
+              "ci95_low": 1.0478,
+              "ci95_high": 1.3254
+            },
+            "height_m": null,
+            "p0_m": [
+              -0.0612,
+              2.0681
+            ],
+            "p1_m": [
+              0.412,
+              0.98
+            ],
+            "support_points": 5140,
+            "openings": []
+          }
+        ],
+        "damage": []
+      }
+    ],
+    "adjacencies": [
+      {
+        "a": "room_0",
+        "b": "room_1",
+        "kind": "shared_wall",
+        "gap_m": 0.0
+      },
+      {
+        "a": "room_1",
+        "b": "room_2",
+        "kind": "shared_wall",
+        "gap_m": 0.0952
+      }
+    ],
+    "footprint_area_m2": 14.0004,
+    "manhattan_theta_deg": 23.5
+  },
+  "scope_line_items": [],
+  "concealed_damage": [
+    {
+      "id": "room0_w0_base_stain_moisture_path",
+      "surface_id": "room0_w0",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room0_w0_sill_stain_under_window",
+      "surface_id": "room0_w0",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room0_w1_base_stain_moisture_path",
+      "surface_id": "room0_w1",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room0_w1_sill_stain_under_window",
+      "surface_id": "room0_w1",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room0_w2_base_stain_moisture_path",
+      "surface_id": "room0_w2",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room0_w2_sill_stain_under_window",
+      "surface_id": "room0_w2",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room0_w3_base_stain_moisture_path",
+      "surface_id": "room0_w3",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room0_w3_sill_stain_under_window",
+      "surface_id": "room0_w3",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room1_w0_base_stain_moisture_path",
+      "surface_id": "room1_w0",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room1_w0_sill_stain_under_window",
+      "surface_id": "room1_w0",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room1_w1_base_stain_moisture_path",
+      "surface_id": "room1_w1",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room1_w1_sill_stain_under_window",
+      "surface_id": "room1_w1",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room1_w2_base_stain_moisture_path",
+      "surface_id": "room1_w2",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room1_w2_sill_stain_under_window",
+      "surface_id": "room1_w2",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room1_w3_base_stain_moisture_path",
+      "surface_id": "room1_w3",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room1_w3_sill_stain_under_window",
+      "surface_id": "room1_w3",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room2_w0_base_stain_moisture_path",
+      "surface_id": "room2_w0",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room2_w0_sill_stain_under_window",
+      "surface_id": "room2_w0",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room2_w1_base_stain_moisture_path",
+      "surface_id": "room2_w1",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room2_w1_sill_stain_under_window",
+      "surface_id": "room2_w1",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room2_w2_base_stain_moisture_path",
+      "surface_id": "room2_w2",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room2_w2_sill_stain_under_window",
+      "surface_id": "room2_w2",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room2_w3_base_stain_moisture_path",
+      "surface_id": "room2_w3",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room2_w3_sill_stain_under_window",
+      "surface_id": "room2_w3",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    }
+  ],
+  "notes": [
+    "manhattan theta 23.5 deg, vertical lines 2, horizontal lines 4"
+  ]
+}

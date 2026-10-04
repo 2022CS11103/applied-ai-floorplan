@@ -1,0 +1,22 @@
+capture: c00a170fe1
+tier: lidar
+status: ok
+rooms: 3
+  room_0: area 7.097 m^2 [6.710, 7.484] ceiling not observed
+    room0_w0: 2.402 m [2.300, 2.504] (no opening)
+    room0_w1: 2.955 m [2.852, 3.057] (no opening)
+    room0_w2: 2.402 m [2.325, 2.479] (no opening)
+    room0_w3: 2.955 m [2.816, 3.094] (no opening)
+  room_1: area 4.053 m^2 [3.716, 4.390] ceiling not observed
+    room1_w0: 2.402 m [2.325, 2.479] (no opening)
+    room1_w1: 1.688 m [1.585, 1.790] (no opening)
+    room1_w2: 2.402 m [2.271, 2.533] (no opening)
+    room1_w3: 1.688 m [1.549, 1.826] (no opening)
+  room_2: area 2.850 m^2 [2.554, 3.146] ceiling not observed
+    room2_w0: 2.402 m [2.271, 2.533] (no opening)
+    room2_w1: 1.187 m [1.084, 1.289] (no opening)
+    room2_w2: 2.402 m [2.314, 2.490] (no opening)
+    room2_w3: 1.187 m [1.048, 1.325] (no opening)
+footprint anchor on 14.0004 off 10.9649
+notes:
+  - manhattan theta 23.5 deg, vertical lines 2, horizontal lines 4
