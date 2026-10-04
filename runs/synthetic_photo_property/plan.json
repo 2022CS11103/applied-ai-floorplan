@@ -10,7 +10,7 @@
   "source": "synthetic_photo_fixture",
   "endpoint_mode": "intersections",
   "timing_s": {
-    "total_s": 0.169
+    "total_s": 0.721
   },
   "quality": {
     "images": 15,
@@ -120,7 +120,21 @@
               0.6084
             ],
             "support_points": 1470,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 1.3743,
+                "sigma": 0.0849,
+                "ci95_low": 1.208,
+                "ci95_high": 1.5407
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "connector_w1",
@@ -145,7 +159,21 @@
               2.3793
             ],
             "support_points": 1806,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 1.7708,
+                "sigma": 0.0849,
+                "ci95_low": 1.6045,
+                "ci95_high": 1.9372
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "connector_w2",
@@ -170,7 +198,21 @@
               2.3793
             ],
             "support_points": 1470,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 1.3743,
+                "sigma": 0.0849,
+                "ci95_low": 1.208,
+                "ci95_high": 1.5407
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "connector_w3",
@@ -195,7 +237,21 @@
               0.6084
             ],
             "support_points": 1806,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 1.7708,
+                "sigma": 0.0849,
+                "ci95_low": 1.6045,
+                "ci95_high": 1.9372
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           }
         ],
         "damage": [],
@@ -206,6 +262,41 @@
             0.6
           ],
           "frame": "synthetic_fixture_meters"
+        },
+        "room_id": "connector",
+        "floor_polygon": [
+          [
+            4.0207,
+            0.6084
+          ],
+          [
+            5.395,
+            0.6084
+          ],
+          [
+            5.395,
+            2.3793
+          ],
+          [
+            4.0207,
+            2.3793
+          ]
+        ],
+        "status": "ok",
+        "reasons": [],
+        "measurements": {
+          "floor_area_m2": {
+            "value": 2.4338,
+            "sigma": 0.1887,
+            "ci95_low": 1.9305,
+            "ci95_high": 2.937
+          },
+          "ceiling_height_m": {
+            "value": 1.925,
+            "sigma": 0.03,
+            "ci95_low": 1.771,
+            "ci95_high": 2.079
+          }
         }
       },
       {
@@ -265,7 +356,21 @@
               -0.0066
             ],
             "support_points": 3654,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 3.9781,
+                "sigma": 0.0849,
+                "ci95_low": 3.6599,
+                "ci95_high": 4.2964
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "room_01_w1",
@@ -290,7 +395,21 @@
               2.9716
             ],
             "support_points": 2814,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 2.9781,
+                "sigma": 0.0849,
+                "ci95_low": 2.7399,
+                "ci95_high": 3.2164
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "room_01_w2",
@@ -315,7 +434,21 @@
               2.9716
             ],
             "support_points": 3654,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 3.9781,
+                "sigma": 0.0849,
+                "ci95_low": 3.6599,
+                "ci95_high": 4.2964
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "room_01_w3",
@@ -340,7 +473,21 @@
               -0.0066
             ],
             "support_points": 2814,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 2.9781,
+                "sigma": 0.0849,
+                "ci95_low": 2.7399,
+                "ci95_high": 3.2164
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           }
         ],
         "damage": [],
@@ -351,6 +498,41 @@
             0.0
           ],
           "frame": "synthetic_fixture_meters"
+        },
+        "room_id": "room_01",
+        "floor_polygon": [
+          [
+            0.024,
+            -0.0066
+          ],
+          [
+            4.0021,
+            -0.0066
+          ],
+          [
+            4.0021,
+            2.9716
+          ],
+          [
+            0.024,
+            2.9716
+          ]
+        ],
+        "status": "ok",
+        "reasons": [],
+        "measurements": {
+          "floor_area_m2": {
+            "value": 11.8474,
+            "sigma": 0.4174,
+            "ci95_low": 10.7344,
+            "ci95_high": 12.9604
+          },
+          "ceiling_height_m": {
+            "value": 1.925,
+            "sigma": 0.03,
+            "ci95_low": 1.771,
+            "ci95_high": 2.079
+          }
         }
       },
       {
@@ -410,7 +592,21 @@
               -0.0048
             ],
             "support_points": 3318,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 3.5781,
+                "sigma": 0.0849,
+                "ci95_low": 3.2919,
+                "ci95_high": 3.8644
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "room_02_w1",
@@ -435,7 +631,21 @@
               3.1733
             ],
             "support_points": 2982,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 3.1781,
+                "sigma": 0.0849,
+                "ci95_low": 2.9239,
+                "ci95_high": 3.4324
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "room_02_w2",
@@ -460,7 +670,21 @@
               3.1733
             ],
             "support_points": 3318,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 3.5781,
+                "sigma": 0.0849,
+                "ci95_low": 3.2919,
+                "ci95_high": 3.8644
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "room_02_w3",
@@ -485,7 +709,21 @@
               -0.0048
             ],
             "support_points": 2982,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 3.1781,
+                "sigma": 0.0849,
+                "ci95_low": 2.9239,
+                "ci95_high": 3.4324
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           }
         ],
         "damage": [],
@@ -496,6 +734,41 @@
             0.0
           ],
           "frame": "synthetic_fixture_meters"
+        },
+        "room_id": "room_02",
+        "floor_polygon": [
+          [
+            5.4248,
+            -0.0048
+          ],
+          [
+            9.003,
+            -0.0048
+          ],
+          [
+            9.003,
+            3.1733
+          ],
+          [
+            5.4248,
+            3.1733
+          ]
+        ],
+        "status": "ok",
+        "reasons": [],
+        "measurements": {
+          "floor_area_m2": {
+            "value": 11.3717,
+            "sigma": 0.4054,
+            "ci95_low": 10.2907,
+            "ci95_high": 12.4527
+          },
+          "ceiling_height_m": {
+            "value": 1.925,
+            "sigma": 0.03,
+            "ci95_low": 1.771,
+            "ci95_high": 2.079
+          }
         }
       },
       {
@@ -555,7 +828,21 @@
               2.9978
             ],
             "support_points": 2814,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 2.9781,
+                "sigma": 0.0849,
+                "ci95_low": 2.7399,
+                "ci95_high": 3.2164
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "room_03_w1",
@@ -580,7 +867,21 @@
               5.5759
             ],
             "support_points": 2478,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 2.5782,
+                "sigma": 0.0849,
+                "ci95_low": 2.3719,
+                "ci95_high": 2.7844
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "room_03_w2",
@@ -605,7 +906,21 @@
               5.5759
             ],
             "support_points": 2814,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 2.9781,
+                "sigma": 0.0849,
+                "ci95_low": 2.7399,
+                "ci95_high": 3.2164
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           },
           {
             "id": "room_03_w3",
@@ -630,7 +945,21 @@
               2.9978
             ],
             "support_points": 2478,
-            "openings": []
+            "openings": [],
+            "measurements": {
+              "length_m": {
+                "value": 2.5782,
+                "sigma": 0.0849,
+                "ci95_low": 2.3719,
+                "ci95_high": 2.7844
+              },
+              "height_m": {
+                "value": 1.925,
+                "sigma": 0.03,
+                "ci95_low": 1.771,
+                "ci95_high": 2.079
+              }
+            }
           }
         ],
         "damage": [],
@@ -641,6 +970,41 @@
             3.0
           ],
           "frame": "synthetic_fixture_meters"
+        },
+        "room_id": "room_03",
+        "floor_polygon": [
+          [
+            0.4222,
+            2.9978
+          ],
+          [
+            3.4004,
+            2.9978
+          ],
+          [
+            3.4004,
+            5.5759
+          ],
+          [
+            0.4222,
+            5.5759
+          ]
+        ],
+        "status": "ok",
+        "reasons": [],
+        "measurements": {
+          "floor_area_m2": {
+            "value": 7.6781,
+            "sigma": 0.3334,
+            "ci95_low": 6.7891,
+            "ci95_high": 8.5671
+          },
+          "ceiling_height_m": {
+            "value": 1.925,
+            "sigma": 0.03,
+            "ci95_low": 1.771,
+            "ci95_high": 2.079
+          }
         }
       }
     ],
@@ -650,21 +1014,33 @@
         "b": "room_01",
         "kind": "shared_wall",
         "gap_m": 0.0186,
-        "source": "geometry"
+        "source": "geometry",
+        "room_a": "connector",
+        "room_b": "room_01",
+        "relationship": "shared_wall",
+        "shared_length_m": 1.7709
       },
       {
         "a": "connector",
         "b": "room_02",
         "kind": "shared_wall",
         "gap_m": 0.0298,
-        "source": "geometry"
+        "source": "geometry",
+        "room_a": "connector",
+        "room_b": "room_02",
+        "relationship": "shared_wall",
+        "shared_length_m": 1.7709
       },
       {
         "a": "room_01",
         "b": "room_03",
         "kind": "shared_wall",
         "gap_m": 0.0262,
-        "source": "geometry"
+        "source": "geometry",
+        "room_a": "room_01",
+        "room_b": "room_03",
+        "relationship": "shared_wall",
+        "shared_length_m": 2.9782
       }
     ],
     "footprint_area_m2": 33.331,

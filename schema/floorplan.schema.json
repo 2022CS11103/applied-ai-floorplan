@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://local/floorplan.schema.json",
   "title": "Cozmo floor plan",
+  "description": "Common plan contract for the LiDAR, video, and photo tiers. Measurement objects are produced by the tier. This schema does not fill in a missing sigma.",
   "type": "object",
   "required": [
     "schema_version",
@@ -9,6 +10,7 @@
     "tier",
     "units",
     "status",
+    "degraded_reasons",
     "property",
     "scope_line_items",
     "concealed_damage",
@@ -19,26 +21,21 @@
     "tier": {"enum": ["lidar", "video", "photo"]},
     "units": {"const": "meters"},
     "status": {"enum": ["ok", "degraded"]},
+    "degraded_reasons": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
     "property": {
       "type": "object",
       "required": ["rooms", "adjacencies"],
       "properties": {
         "rooms": {
           "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["id", "polygon_m", "floor_area_m2", "walls", "ceiling_observed"],
-            "properties": {
-              "floor_area_m2": {"$ref": "#/$defs/measurement"},
-              "walls": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "required": ["id", "length_m", "p0_m", "p1_m", "openings"]
-                }
-              }
-            }
-          }
+          "items": {"$ref": "#/$defs/room"}
+        },
+        "adjacencies": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/adjacency"}
         }
       }
     }
@@ -46,7 +43,134 @@
   "$defs": {
     "measurement": {
       "type": "object",
-      "required": ["value", "sigma", "ci95_low", "ci95_high"]
+      "required": ["value", "sigma", "ci95_low", "ci95_high"],
+      "properties": {
+        "value": {"type": "number"},
+        "sigma": {"type": "number"},
+        "ci95_low": {"type": "number"},
+        "ci95_high": {"type": "number"}
+      }
+    },
+    "room": {
+      "type": "object",
+      "required": [
+        "id",
+        "room_id",
+        "polygon_m",
+        "floor_polygon",
+        "floor_area_m2",
+        "ceiling_height_m",
+        "ceiling_observed",
+        "walls",
+        "measurements",
+        "status",
+        "reasons"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "room_id": {"type": "string", "minLength": 1},
+        "polygon_m": {"$ref": "#/$defs/polygon"},
+        "floor_polygon": {"$ref": "#/$defs/polygon"},
+        "floor_area_m2": {"$ref": "#/$defs/measurement"},
+        "ceiling_height_m": {
+          "anyOf": [{"type": "null"}, {"$ref": "#/$defs/measurement"}]
+        },
+        "ceiling_observed": {"type": "boolean"},
+        "status": {"enum": ["ok", "degraded"]},
+        "reasons": {"type": "array", "items": {"type": "string"}},
+        "measurements": {
+          "type": "object",
+          "required": ["floor_area_m2", "ceiling_height_m"],
+          "properties": {
+            "floor_area_m2": {"$ref": "#/$defs/measurement"},
+            "ceiling_height_m": {
+              "anyOf": [{"type": "null"}, {"$ref": "#/$defs/measurement"}]
+            }
+          }
+        },
+        "walls": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/wall"}
+        }
+      }
+    },
+    "wall": {
+      "type": "object",
+      "required": ["id", "length_m", "p0_m", "p1_m", "openings", "measurements"],
+      "properties": {
+        "id": {"type": "string"},
+        "length_m": {"$ref": "#/$defs/measurement"},
+        "height_m": {
+          "anyOf": [{"type": "null"}, {"$ref": "#/$defs/measurement"}]
+        },
+        "measurements": {
+          "type": "object",
+          "required": ["length_m", "height_m"],
+          "properties": {
+            "length_m": {"$ref": "#/$defs/measurement"},
+            "height_m": {
+              "anyOf": [{"type": "null"}, {"$ref": "#/$defs/measurement"}]
+            }
+          }
+        },
+        "openings": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/opening"}
+        }
+      }
+    },
+    "opening": {
+      "type": "object",
+      "required": ["id", "width_m", "measurements"],
+      "properties": {
+        "width_m": {"$ref": "#/$defs/measurement"},
+        "sill_height_m": {
+          "anyOf": [{"type": "null"}, {"$ref": "#/$defs/measurement"}]
+        },
+        "head_height_m": {
+          "anyOf": [{"type": "null"}, {"$ref": "#/$defs/measurement"}]
+        },
+        "measurements": {
+          "type": "object",
+          "required": ["width_m"],
+          "properties": {
+            "width_m": {"$ref": "#/$defs/measurement"},
+            "sill_height_m": {
+              "anyOf": [{"type": "null"}, {"$ref": "#/$defs/measurement"}]
+            },
+            "head_height_m": {
+              "anyOf": [{"type": "null"}, {"$ref": "#/$defs/measurement"}]
+            }
+          }
+        }
+      }
+    },
+    "adjacency": {
+      "type": "object",
+      "required": ["a", "b", "room_a", "room_b", "kind", "relationship", "source", "shared_length_m"],
+      "properties": {
+        "a": {"type": "string"},
+        "b": {"type": "string"},
+        "room_a": {"type": "string"},
+        "room_b": {"type": "string"},
+        "kind": {"type": "string"},
+        "relationship": {"type": "string"},
+        "source": {"type": "string"},
+        "gap_m": {"type": "number"},
+        "shared_length_m": {
+          "anyOf": [{"type": "null"}, {"type": "number"}]
+        }
+      }
+    },
+    "polygon": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {"type": "number"}
+      }
     }
   }
 }

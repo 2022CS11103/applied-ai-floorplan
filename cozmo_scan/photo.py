@@ -20,6 +20,7 @@ import cv2
 import numpy as np
 
 from . import __version__
+from .contract import apply_contract
 from .fuse import Cloud, align_floor
 from .geometry import shoelace
 from .layout import _rotate2, _shared_edge, build_layout, layout_to_dict
@@ -625,14 +626,15 @@ def _emit(
         "concealed_damage": [],
         "notes": notes,
     }
+    document = apply_contract(document)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "plan.json").write_text(json.dumps(_jsonable(document), indent=2), encoding="utf-8")
     render_plan(document, out_dir / "plan.png")
     lines = [
         f"capture: {document['capture_id']}",
         f"tier: photo",
-        f"status: {status}",
-        f"rooms: {len(rooms)}",
+        f"status: {document['status']}",
+        f"rooms: {len(document['property']['rooms'])}",
         f"reasons: {', '.join(document['degraded_reasons']) or 'none'}",
         FIXTURE_LABEL if quality.get("synthetic_fixture") else "photo",
     ]

@@ -11,6 +11,7 @@ import numpy as np
 
 from . import __version__
 from .capture import discover, imu_gravity_g
+from .contract import apply_contract
 from .damage import colorize_lidar, concealed_flags, detect_on_points, scope_items
 from .fuse import align_floor, fuse_lidar
 from .layout import build_layout, footprint_area, layout_to_dict
@@ -155,6 +156,9 @@ def run_one(
     document["timing_s"]["total_s"] = round(time.perf_counter() - t0, 3)
     if tier == "video":
         document["degraded_reasons"] = degraded_reasons
+    elif "degraded_reasons" not in document:
+        document["degraded_reasons"] = []
+    document = apply_contract(document)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "plan.json"
@@ -237,6 +241,7 @@ def _emit_video_without_layout(capture, cloud, out_dir, endpoint_mode, floor_anc
         "concealed_damage": [],
         "notes": notes,
     }
+    document = apply_contract(document)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "plan.json").write_text(json.dumps(_jsonable(document), indent=2), encoding="utf-8")
     render_plan(document, out_dir / "plan.png")
