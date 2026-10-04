@@ -50,8 +50,55 @@ def detect_on_points(xyz: np.ndarray, colors: np.ndarray, rooms: list[dict], tie
                 reg["extent_m2"] = meas(reg["extent"], reg["sigma"], abs_floor, rel)
                 reg.pop("extent")
                 reg.pop("sigma")
+                _publish_region(reg, wall)
                 found.append(reg)
     return found
+
+
+def _publish_region(reg: dict, wall: dict) -> None:
+    """Names the assessment asks for, pointing at fields this detector already computed.
+
+    confidence stays null. mean_delta_e is a color residual, not a class probability.
+    concealed is a rule about visible evidence. It is not a look behind the wall.
+    """
+    reg["damage_id"] = reg["id"]
+    reg["surface"] = reg["surface_id"]
+    reg["extent"] = reg["extent_m2"]
+    reg["region"] = {
+        "centroid_m": reg["centroid_m"],
+        "height_band_m": reg["height_band_m"],
+        "along_m": reg["along_m"],
+        "cell_m": 0.10,
+    }
+    rules = _region_rules(reg, wall)
+    reg["concealed"] = bool(rules)
+    reg["concealed_rules"] = rules
+    reg["confidence"] = None
+    reg["evidence"] = {
+        "method": "local_lab_residual",
+        "mean_delta_e": reg["mean_delta_e"],
+        "unit_extent": "m2",
+        "concealed_observed_directly": False,
+        "note": (
+            "The extent interval is the uncertainty this detector supports. "
+            "A concealed rule uses the visible patch. The capture does not see behind the wall."
+        ),
+    }
+
+
+def _region_rules(reg: dict, wall: dict) -> list[str]:
+    """Same predicates as the wall-level flags, recorded on the region that tripped them."""
+    rules = []
+    if (
+        reg["class"] in {"stain", "moisture"}
+        and reg["height_band_m"][0] <= 0.30
+        and reg["extent_m2"]["value"] >= 0.04
+    ):
+        rules.append("base_stain_moisture_path")
+    windows = [opening for opening in wall.get("openings") or [] if opening.get("class") == "window"]
+    if windows and reg["class"] in {"stain", "moisture"} and reg["height_band_m"][1] >= 0.7:
+        rules.append("sill_stain_under_window")
+    return rules
 
 
 def _wall_regions(xyz: np.ndarray, colors: np.ndarray, wall: dict, room_id: str) -> list[dict]:
@@ -155,17 +202,22 @@ def _wall_regions(xyz: np.ndarray, colors: np.ndarray, wall: dict, room_id: str)
         sigma = max(0.4 * area, 0.01)  # color extent is coarser than the tape
         regions.append(
             {
-                "id": f"{wall['id']}_d{len(regions)}",
                 "room_id": room_id,
                 "surface_id": wall["id"],
                 "class": klass,
                 "extent": float(area),
                 "sigma": float(sigma),
                 "height_band_m": [round(float(h0), 3), round(float(h1), 3)],
+                "along_m": [round(float(min(aa) * cell), 3), round(float((max(aa) + 1) * cell), 3)],
                 "centroid_m": [round(float(center[0]), 3), round(float(center[1]), 3)],
                 "mean_delta_e": round(float(deltas.mean()), 2),
             }
         )
+    # Low on the wall first, then along the wall, so the id does not follow
+    # whichever cell the grid happened to visit first.
+    regions.sort(key=lambda reg: (reg["height_band_m"][0], reg["centroid_m"][0], reg["class"]))
+    for index, reg in enumerate(regions):
+        reg["id"] = f"{wall['id']}_d{index}"
     return regions
 
 

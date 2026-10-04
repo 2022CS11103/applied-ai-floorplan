@@ -73,7 +73,11 @@ def test_lidar_sample_still_closes_three_rooms(tmp_path):
     for room in rooms:
         lengths = [wall["length_m"]["value"] for wall in room["walls"]]
         assert any(abs(length - 2.40) <= 0.08 for length in lengths), lengths
+        assert room["damage"] == []
         for wall in room["walls"]:
             measure = wall["length_m"]
             assert set(("value", "sigma", "ci95_low", "ci95_high")) <= set(measure)
             assert measure["ci95_low"] <= measure["value"] <= measure["ci95_high"]
+    assert plan["scope_line_items"] == []
+    assert plan["concealed_damage"]
+    assert all(flag["fired"] is False for flag in plan["concealed_damage"])

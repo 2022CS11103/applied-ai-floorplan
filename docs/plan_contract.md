@@ -49,6 +49,10 @@ A link exists only when two floor polygons share an edge.
 
 If the polygons do not share an edge, the adjacency list stays empty. The plan does not draw a connector to force one property.
 
+## Damage
+
+Damage hangs off the room that already exists. A region carries `room_id` and `surface_id`. It does not contain a second copy of the floor polygon. The extent is `extent_m2`, the same measurement object as `extent`. `confidence` is null: this detector has a color residual, not a calibrated probability. Classes, the concealed-damage rules, and the synthetic fixture are in `docs/damage.md`.
+
 ## What is not claimed
 
 Matching this schema is not a laser or tape check. Footprint, wall length, and opening gates stay blocked until a physical measurement exists.

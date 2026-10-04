@@ -35,6 +35,8 @@ Video on a LiDAR bundle ignores the depth images and uses the metric poses. Fram
 
 Photos are one folder of 2–8 stills per room. A property is the parent of those folders. Rooms are stitched only where the floor polygons share an edge; a handwritten adjacency file is ignored, and overlapping floors are rejected. There is no iPhone 15+ photo capture in this repo, so the checked property is `fixtures/synthetic_photo_property`. That folder is a synthetic test fixture, not physical ground truth. The photo gates (footprint ±8%, wall lengths ±8%, adjacency on a real capture) stay blocked without a tape.
 
+Damage is a local color residual on a wall: `stain` or `moisture`, with area in square metres. A concealed flag is a written rule about that visible patch, not a view behind the wall. The only staged example is `fixtures/synthetic_damage`, and it is a synthetic test fixture, not physical ground truth. See `docs/damage.md`.
+
 ## Output
 
 `runs/<name>/plan.json` follows `schema/floorplan.schema.json`. `plan.png` is the drawing. Lengths are metres. The room graph is the same on every tier: `room_id` and `floor_polygon` on each room, and adjacency as `room_a`, `room_b`, `relationship`, `source`, and `shared_length_m` only when the floor polygons already share an edge. Every measured length keeps `value`, `sigma`, `ci95_low`, and `ci95_high`. A ceiling that was not seen is `null`, not a guessed interval. `degraded_reasons` is always present. An empty room list is never `status=ok`. Details are in `docs/plan_contract.md`.

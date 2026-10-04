@@ -25,6 +25,11 @@
       "type": "array",
       "items": {"type": "string"}
     },
+    "scope_line_items": {"type": "array"},
+    "concealed_damage": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/concealed_flag"}
+    },
     "property": {
       "type": "object",
       "required": ["rooms", "adjacencies"],
@@ -91,6 +96,10 @@
         "walls": {
           "type": "array",
           "items": {"$ref": "#/$defs/wall"}
+        },
+        "damage": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/damage_region"}
         }
       }
     },
@@ -170,6 +179,46 @@
         "minItems": 2,
         "maxItems": 2,
         "items": {"type": "number"}
+      }
+    },
+    "damage_region": {
+      "type": "object",
+      "required": [
+        "id",
+        "damage_id",
+        "room_id",
+        "surface_id",
+        "surface",
+        "class",
+        "region",
+        "extent_m2",
+        "extent",
+        "confidence",
+        "concealed",
+        "evidence"
+      ],
+      "properties": {
+        "id": {"type": "string"},
+        "damage_id": {"type": "string"},
+        "room_id": {"type": "string"},
+        "surface_id": {"type": "string"},
+        "surface": {"type": "string"},
+        "class": {"enum": ["stain", "moisture", "discoloration"]},
+        "extent_m2": {"$ref": "#/$defs/measurement"},
+        "extent": {"$ref": "#/$defs/measurement"},
+        "confidence": {"type": "null"},
+        "concealed": {"type": "boolean"},
+        "evidence": {"type": "object"},
+        "region": {"type": "object"}
+      }
+    },
+    "concealed_flag": {
+      "type": "object",
+      "required": ["id", "surface_id", "rule", "fired", "evidence"],
+      "properties": {
+        "rule": {"enum": ["base_stain_moisture_path", "sill_stain_under_window"]},
+        "fired": {"type": "boolean"},
+        "evidence": {"type": "string"}
       }
     }
   }

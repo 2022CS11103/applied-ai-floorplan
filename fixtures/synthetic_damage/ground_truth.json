@@ -1,0 +1,21 @@
+{
+  "label": "synthetic/test fixture — not physical benchmark ground truth",
+  "note": "These extents are the painted rectangles in input/scene.json. They are not the detector output and they are not a tape.",
+  "unit_extent": "m2",
+  "regions": [
+    {
+      "class": "stain",
+      "room_id": "room_01",
+      "surface_id": "room_01_w0",
+      "extent_m2": 0.32,
+      "concealed_rule": null
+    },
+    {
+      "class": "moisture",
+      "room_id": "room_01",
+      "surface_id": "room_01_w0",
+      "extent_m2": 0.18,
+      "concealed_rule": "base_stain_moisture_path"
+    }
+  ]
+}
