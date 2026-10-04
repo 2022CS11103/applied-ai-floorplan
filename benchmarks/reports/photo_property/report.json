@@ -1,0 +1,78 @@
+{
+  "case_id": "photo_property",
+  "tier": "photo",
+  "evaluator_only": false,
+  "assessment_gate": {
+    "status": "blocked",
+    "reason": "physical laser/tape ground truth is not available"
+  },
+  "rooms": [],
+  "wall_accuracy": {
+    "status": "unavailable",
+    "reason": "no ground truth",
+    "rows": []
+  },
+  "opening_accuracy": {
+    "status": "unavailable",
+    "reason": "no ground truth",
+    "rows": []
+  },
+  "ceiling_accuracy": {
+    "status": "unavailable",
+    "reason": "no ground truth",
+    "rows": []
+  },
+  "repeatability": {
+    "status": "unavailable",
+    "reason": "no second capture",
+    "rows": []
+  },
+  "photo_property": {
+    "status": "unavailable",
+    "reason": "no ground truth",
+    "rows": []
+  },
+  "calibration": {
+    "status": "unavailable",
+    "source": "plan",
+    "evidence": {
+      "scale_source": "synthetic_fixture_meters"
+    },
+    "reason": "fixture metres are not a tape calibration"
+  },
+  "drift": {
+    "status": "evidence_only",
+    "mode": [
+      "fixture laid out in a local metre frame; floor already at y=0",
+      "no property-level pose graph"
+    ],
+    "evidence": {
+      "method": [
+        "fixture laid out in a local metre frame; floor already at y=0",
+        "no property-level pose graph"
+      ],
+      "floor_tilt_deg": null,
+      "floor_residual_m": null,
+      "chunk_floor_offsets_m": [],
+      "loop": {
+        "fired": false,
+        "reason": "disabled"
+      },
+      "footprint_area_m2_anchor_on": 33.331,
+      "footprint_area_m2_anchor_off": 33.331
+    },
+    "footprint_delta_m2": 0.0,
+    "wall_comparison": "unavailable",
+    "reason": "no drift-off plan was supplied for a wall-by-wall comparison",
+    "rows": []
+  },
+  "blocked_metrics": [
+    "wall_accuracy",
+    "opening_accuracy",
+    "ceiling_accuracy",
+    "repeatability",
+    "photo_property",
+    "calibration",
+    "assessment_gate"
+  ]
+}

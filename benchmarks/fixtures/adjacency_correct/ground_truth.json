@@ -1,0 +1,37 @@
+{
+  "case_id": "adjacency_correct",
+  "tier": "photo",
+  "evaluator_only": true,
+  "label": "synthetic evaluator fixture \u2014 not physical ground truth",
+  "provenance": "synthetic_evaluator",
+  "rooms": [
+    {
+      "room_id": "room_01",
+      "walls": [
+        {
+          "wall_id": "room_01_w0",
+          "length_m": 4.0
+        }
+      ],
+      "openings": []
+    },
+    {
+      "room_id": "room_02",
+      "walls": [
+        {
+          "wall_id": "room_02_w0",
+          "length_m": 3.0
+        }
+      ],
+      "openings": []
+    }
+  ],
+  "footprint_m2": 12.0,
+  "adjacencies": [
+    {
+      "room_a": "room_01",
+      "room_b": "room_02"
+    }
+  ],
+  "overlap_m2_max": 0.0
+}

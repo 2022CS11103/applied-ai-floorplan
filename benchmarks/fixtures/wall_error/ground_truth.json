@@ -1,0 +1,27 @@
+{
+  "case_id": "wall_error",
+  "tier": "video",
+  "evaluator_only": true,
+  "label": "synthetic evaluator fixture \u2014 not physical ground truth",
+  "provenance": "synthetic_evaluator",
+  "rooms": [
+    {
+      "room_id": "room_0",
+      "walls": [
+        {
+          "wall_id": "room_0_w0",
+          "length_m": 3.8,
+          "p0_m": [
+            0,
+            0
+          ],
+          "p1_m": [
+            3.8,
+            0
+          ]
+        }
+      ],
+      "openings": []
+    }
+  ]
+}

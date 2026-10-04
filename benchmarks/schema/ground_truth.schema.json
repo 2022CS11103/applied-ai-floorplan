@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local/benchmark_ground_truth.schema.json",
+  "title": "Benchmark ground truth",
+  "description": "Laser or tape measurements for one case. Predicted plan values do not belong here.",
+  "type": "object",
+  "required": ["case_id", "tier", "rooms"],
+  "properties": {
+    "case_id": {"type": "string"},
+    "tier": {"enum": ["lidar", "video", "photo"]},
+    "evaluator_only": {"type": "boolean"},
+    "provenance": {"enum": ["synthetic_evaluator", "laser_tape"]},
+    "label": {"type": "string"},
+    "footprint_m2": {"type": "number"},
+    "overlap_m2_max": {"type": "number"},
+    "room_map": {"type": "object", "additionalProperties": {"type": "string"}},
+    "calibration": {
+      "type": "object",
+      "properties": {
+        "scale": {"enum": ["measured", "estimated", "unavailable"]}
+      }
+    },
+    "rooms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["room_id"],
+        "properties": {
+          "room_id": {"type": "string"},
+          "ceiling_height_m": {"type": ["number", "null"]},
+          "walls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["length_m"],
+              "properties": {
+                "wall_id": {"type": "string"},
+                "length_m": {"type": "number"},
+                "p0_m": {"type": "array"},
+                "p1_m": {"type": "array"}
+              }
+            }
+          },
+          "openings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["wall_id", "width_m"],
+              "properties": {
+                "opening_id": {"type": "string"},
+                "wall_id": {"type": "string"},
+                "width_m": {"type": "number"},
+                "class": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "adjacencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["room_a", "room_b"]
+      }
+    }
+  }
+}

@@ -1,0 +1,46 @@
+case: exact_match
+tier: video
+assessment gate: blocked — synthetic evaluator fixture is not laser/tape ground truth
+
+[wall_accuracy] evaluated
+  n_evaluated=1  n_pass=1  pass_rate=1.0  n_missed=0  n_phantom=0  worst_abs_error_m=0.0
+  wall
+    predicted: 4.0
+    ground_truth: 4.0
+    absolute_error: 0.0
+    relative_error: 0.0
+    threshold: {'relative': 0.03, 'absolute_m': None}
+    pass: True
+
+[opening_accuracy] evaluated
+  n_evaluated=1  n_pass=1  pass_rate=1.0  n_missed=0  n_phantom=0  worst_abs_error_m=0.0
+  opening
+    predicted: 0.8
+    ground_truth: 0.8
+    absolute_error: 0.0
+    relative_error: 0.0
+    threshold: {'absolute_m': 0.02, 'relative': None}
+    pass: True
+
+[ceiling_accuracy] evaluated
+  n_evaluated=1  n_pass=1  pass_rate=1.0  n_missed=0  n_phantom=0  worst_abs_error_m=0.0
+  ceiling
+    predicted: 2.5
+    ground_truth: 2.5
+    absolute_error: 0.0
+    relative_error: 0.0
+    threshold: {'absolute_m': 0.015, 'relative': None}
+    pass: True
+
+[repeatability] unavailable
+  reason: no second capture
+
+[photo_property] not_applicable
+  reason: tier is not photo
+
+[calibration] unavailable
+  reason: plan has no calibration record
+[drift] evidence_only
+  reason: no drift-off plan was supplied for a wall-by-wall comparison
+
+blocked or unavailable: repeatability, calibration, assessment_gate

@@ -1,0 +1,162 @@
+{
+  "case_id": "exact_match",
+  "tier": "video",
+  "evaluator_only": true,
+  "assessment_gate": {
+    "status": "blocked",
+    "reason": "synthetic evaluator fixture is not laser/tape ground truth"
+  },
+  "rooms": [
+    {
+      "room_id": "room_0",
+      "ground_truth_room_id": "room_0",
+      "status": "matched"
+    }
+  ],
+  "wall_accuracy": {
+    "status": "evaluated",
+    "metric": "wall",
+    "threshold": {
+      "relative": 0.03,
+      "absolute_m": null
+    },
+    "n_evaluated": 1,
+    "n_pass": 1,
+    "pass_rate": 1.0,
+    "n_missed": 0,
+    "n_phantom": 0,
+    "worst_abs_error_m": 0.0,
+    "rows": [
+      {
+        "kind": "wall",
+        "wall_id": "room_0_w0",
+        "opening_id": null,
+        "room_id": null,
+        "id": "room_0_w0",
+        "ground_truth_id": "room_0_w0",
+        "predicted": 4.0,
+        "ground_truth": 4.0,
+        "absolute_error": 0.0,
+        "relative_error": 0.0,
+        "threshold": {
+          "relative": 0.03,
+          "absolute_m": null
+        },
+        "pass": true
+      }
+    ],
+    "video_threshold_rel": 0.03
+  },
+  "opening_accuracy": {
+    "status": "evaluated",
+    "metric": "opening",
+    "threshold": {
+      "absolute_m": 0.02,
+      "relative": null,
+      "pass_rate": 0.85
+    },
+    "n_evaluated": 1,
+    "n_pass": 1,
+    "pass_rate": 1.0,
+    "n_missed": 0,
+    "n_phantom": 0,
+    "worst_abs_error_m": 0.0,
+    "rows": [
+      {
+        "kind": "opening",
+        "wall_id": null,
+        "opening_id": "room_0_w0_o0",
+        "room_id": null,
+        "id": "room_0_w0_o0",
+        "ground_truth_id": "room_0_w0_o0",
+        "predicted": 0.8,
+        "ground_truth": 0.8,
+        "absolute_error": 0.0,
+        "relative_error": 0.0,
+        "threshold": {
+          "absolute_m": 0.02,
+          "relative": null
+        },
+        "pass": true
+      }
+    ],
+    "pass_rate_threshold": 0.85,
+    "gate_pass": true
+  },
+  "ceiling_accuracy": {
+    "status": "evaluated",
+    "metric": "ceiling",
+    "threshold": {
+      "absolute_m": 0.015,
+      "relative": null,
+      "repeat_spread_m": 0.01
+    },
+    "n_evaluated": 1,
+    "n_pass": 1,
+    "pass_rate": 1.0,
+    "n_missed": 0,
+    "n_phantom": 0,
+    "worst_abs_error_m": 0.0,
+    "rows": [
+      {
+        "kind": "ceiling",
+        "wall_id": null,
+        "opening_id": null,
+        "room_id": "room_0",
+        "id": "room_0",
+        "ground_truth_id": "room_0",
+        "predicted": 2.5,
+        "ground_truth": 2.5,
+        "absolute_error": 0.0,
+        "relative_error": 0.0,
+        "threshold": {
+          "absolute_m": 0.015,
+          "relative": null
+        },
+        "pass": true
+      }
+    ]
+  },
+  "repeatability": {
+    "status": "unavailable",
+    "reason": "no second capture",
+    "rows": []
+  },
+  "photo_property": {
+    "status": "not_applicable",
+    "reason": "tier is not photo",
+    "rows": []
+  },
+  "calibration": {
+    "status": "unavailable",
+    "source": "plan",
+    "evidence": {},
+    "reason": "plan has no calibration record"
+  },
+  "drift": {
+    "status": "evidence_only",
+    "mode": [
+      "evaluator fixture, drift not re-run"
+    ],
+    "evidence": {
+      "method": [
+        "evaluator fixture, drift not re-run"
+      ],
+      "floor_tilt_deg": null,
+      "floor_residual_m": null,
+      "chunk_floor_offsets_m": null,
+      "loop": null,
+      "footprint_area_m2_anchor_on": 12.0,
+      "footprint_area_m2_anchor_off": 11.6
+    },
+    "footprint_delta_m2": 0.4,
+    "wall_comparison": "unavailable",
+    "reason": "no drift-off plan was supplied for a wall-by-wall comparison",
+    "rows": []
+  },
+  "blocked_metrics": [
+    "repeatability",
+    "calibration",
+    "assessment_gate"
+  ]
+}

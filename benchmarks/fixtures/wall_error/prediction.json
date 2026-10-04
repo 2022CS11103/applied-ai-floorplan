@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "capture_id": "wall_error",
+  "tier": "video",
+  "units": "meters",
+  "status": "ok",
+  "degraded_reasons": [],
+  "property": {
+    "rooms": [
+      {
+        "id": "room_0",
+        "room_id": "room_0",
+        "walls": [
+          {
+            "id": "room_0_w0",
+            "length_m": {
+              "value": 4.0,
+              "sigma": 0.01,
+              "ci95_low": 3.98,
+              "ci95_high": 4.02
+            },
+            "p0_m": [
+              0,
+              0
+            ],
+            "p1_m": [
+              4,
+              0
+            ],
+            "openings": [],
+            "height_m": null
+          }
+        ],
+        "ceiling_height_m": null,
+        "ceiling_observed": false
+      }
+    ],
+    "adjacencies": [],
+    "footprint_area_m2": null
+  },
+  "quality": {},
+  "drift": {
+    "method": [
+      "evaluator fixture, drift not re-run"
+    ],
+    "footprint_area_m2_anchor_on": null,
+    "footprint_area_m2_anchor_off": null
+  }
+}

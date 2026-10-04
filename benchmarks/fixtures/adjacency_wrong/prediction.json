@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0",
+  "capture_id": "adjacency_wrong",
+  "tier": "photo",
+  "units": "meters",
+  "status": "ok",
+  "degraded_reasons": [],
+  "property": {
+    "rooms": [
+      {
+        "id": "room_01",
+        "room_id": "room_01",
+        "walls": [
+          {
+            "id": "room_01_w0",
+            "length_m": {
+              "value": 4.0,
+              "sigma": 0.01,
+              "ci95_low": 3.98,
+              "ci95_high": 4.02
+            },
+            "p0_m": [
+              0,
+              0
+            ],
+            "p1_m": [
+              4,
+              0
+            ],
+            "openings": [],
+            "height_m": null
+          }
+        ],
+        "ceiling_height_m": null,
+        "ceiling_observed": false
+      },
+      {
+        "id": "room_02",
+        "room_id": "room_02",
+        "walls": [
+          {
+            "id": "room_02_w0",
+            "length_m": {
+              "value": 3.0,
+              "sigma": 0.01,
+              "ci95_low": 2.98,
+              "ci95_high": 3.02
+            },
+            "p0_m": [
+              4,
+              0
+            ],
+            "p1_m": [
+              7,
+              0
+            ],
+            "openings": [],
+            "height_m": null
+          }
+        ],
+        "ceiling_height_m": null,
+        "ceiling_observed": false
+      }
+    ],
+    "adjacencies": [
+      {
+        "a": "room_01",
+        "b": "room_02",
+        "room_a": "room_01",
+        "room_b": "room_02",
+        "kind": "shared_wall",
+        "relationship": "shared_wall",
+        "source": "geometry"
+      }
+    ],
+    "footprint_area_m2": 12.0
+  },
+  "quality": {
+    "overlap_m2": 0.0,
+    "overlaps": [],
+    "scale_source": "synthetic_fixture_meters",
+    "scale_estimated": false
+  },
+  "drift": {
+    "method": [
+      "evaluator fixture, drift not re-run"
+    ],
+    "footprint_area_m2_anchor_on": 12.0,
+    "footprint_area_m2_anchor_off": 11.6
+  }
+}

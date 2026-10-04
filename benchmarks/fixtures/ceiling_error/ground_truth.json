@@ -1,0 +1,20 @@
+{
+  "case_id": "ceiling_error",
+  "tier": "lidar",
+  "evaluator_only": true,
+  "label": "synthetic evaluator fixture \u2014 not physical ground truth",
+  "provenance": "synthetic_evaluator",
+  "rooms": [
+    {
+      "room_id": "room_0",
+      "walls": [
+        {
+          "wall_id": "room_0_w0",
+          "length_m": 4.0
+        }
+      ],
+      "openings": [],
+      "ceiling_height_m": 2.5
+    }
+  ]
+}

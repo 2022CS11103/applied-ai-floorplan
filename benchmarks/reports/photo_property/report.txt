@@ -1,0 +1,25 @@
+case: photo_property
+tier: photo
+assessment gate: blocked — physical laser/tape ground truth is not available
+
+[wall_accuracy] unavailable
+  reason: no ground truth
+
+[opening_accuracy] unavailable
+  reason: no ground truth
+
+[ceiling_accuracy] unavailable
+  reason: no ground truth
+
+[repeatability] unavailable
+  reason: no second capture
+
+[photo_property] unavailable
+  reason: no ground truth
+
+[calibration] unavailable
+  reason: fixture metres are not a tape calibration
+[drift] evidence_only
+  reason: no drift-off plan was supplied for a wall-by-wall comparison
+
+blocked or unavailable: wall_accuracy, opening_accuracy, ceiling_accuracy, repeatability, photo_property, calibration, assessment_gate

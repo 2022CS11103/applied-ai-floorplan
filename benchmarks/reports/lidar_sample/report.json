@@ -1,0 +1,89 @@
+{
+  "case_id": "lidar_sample",
+  "tier": "lidar",
+  "evaluator_only": false,
+  "assessment_gate": {
+    "status": "blocked",
+    "reason": "physical laser/tape ground truth is not available"
+  },
+  "rooms": [],
+  "wall_accuracy": {
+    "status": "unavailable",
+    "reason": "no ground truth",
+    "rows": []
+  },
+  "opening_accuracy": {
+    "status": "unavailable",
+    "reason": "no ground truth",
+    "rows": []
+  },
+  "ceiling_accuracy": {
+    "status": "unavailable",
+    "reason": "no ground truth",
+    "rows": []
+  },
+  "repeatability": {
+    "status": "unavailable",
+    "reason": "no second capture",
+    "rows": []
+  },
+  "photo_property": {
+    "status": "not_applicable",
+    "reason": "tier is not photo",
+    "rows": []
+  },
+  "calibration": {
+    "status": "unavailable",
+    "source": "plan",
+    "evidence": {},
+    "reason": "plan has no calibration record"
+  },
+  "drift": {
+    "status": "evidence_only",
+    "mode": [
+      "RANSAC floor-plane anchor",
+      "per-chunk vertical floor shift",
+      "loop closure checked and not applied"
+    ],
+    "evidence": {
+      "method": [
+        "RANSAC floor-plane anchor",
+        "per-chunk vertical floor shift",
+        "loop closure checked and not applied"
+      ],
+      "floor_tilt_deg": 0.488,
+      "floor_residual_m": 0.0055,
+      "chunk_floor_offsets_m": [
+        0.0255,
+        -0.0013,
+        0.001,
+        -0.0238
+      ],
+      "loop": {
+        "fired": false,
+        "reason": "alignment is too large to be a loop; left poses unchanged",
+        "yaw_deg": -12.769,
+        "translation_m": [
+          3.663,
+          -2.63
+        ],
+        "rmse_before_m": 3.886,
+        "rmse_after_m": 1.337
+      },
+      "footprint_area_m2_anchor_on": 14.0004,
+      "footprint_area_m2_anchor_off": 10.9649
+    },
+    "footprint_delta_m2": 3.0355,
+    "wall_comparison": "unavailable",
+    "reason": "no drift-off plan was supplied for a wall-by-wall comparison",
+    "rows": []
+  },
+  "blocked_metrics": [
+    "wall_accuracy",
+    "opening_accuracy",
+    "ceiling_accuracy",
+    "repeatability",
+    "calibration",
+    "assessment_gate"
+  ]
+}
