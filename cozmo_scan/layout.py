@@ -491,28 +491,51 @@ def _polygon_for_cell(left, right, bottom, top, x0, x1, y0, y1, theta, endpoint_
     return {"polygon": polygon, "walls": walls}
 
 
-def _local_pitch(sorted_pts: np.ndarray) -> float:
-    """Spacing from one wall column to the next, not the noise inside a column.
+def _station_centers(sorted_pts: np.ndarray) -> np.ndarray:
+    """One position per scan column.
 
-    A lidar sheet drops many returns on the same station. The median gap is
-    then a few millimetres of noise, and a half-gap shift does nothing. When
-    the large gaps separate from that noise, the pitch is those column jumps.
-    A single return per station has no second scale, and the median gap is
-    the pitch.
+    Many returns land on the same station and only differ by sensor noise.
+    Those are one column. A regular comb with a single spacing is left as-is,
+    so a 1 cm grid is not chained into one blob.
     """
-    if len(sorted_pts) < 3:
+    pts = np.asarray(sorted_pts, dtype=float)
+    if len(pts) < 3:
+        return pts
+    diffs = np.diff(pts)
+    positive = diffs[diffs > 1e-4]
+    if len(positive) < 3:
+        return np.array([float(np.median(pts))])
+    typical = float(np.median(positive))
+    upper = float(np.percentile(positive, 95))
+    # Two scales: millimetres inside a column, and the jump to the next one.
+    if not (upper > max(0.02, 4.0 * typical)):
+        return pts
+    split_at = 0.5 * upper
+    centers = []
+    start = 0
+    for i, gap in enumerate(diffs):
+        if gap >= split_at:
+            centers.append(float(np.median(pts[start : i + 1])))
+            start = i + 1
+    centers.append(float(np.median(pts[start:])))
+    return np.asarray(centers, dtype=float)
+
+
+def _local_pitch(sorted_pts: np.ndarray) -> float:
+    """Center-to-center spacing of wall columns.
+
+    The gap between the noisiest returns of two columns is shorter than the
+    column spacing by about the noise span. The pitch used for the jamb is
+    the spacing of the column centers.
+    """
+    centers = _station_centers(np.asarray(sorted_pts, dtype=float))
+    if len(centers) < 3:
         return 0.02
-    diffs = np.diff(sorted_pts)
+    diffs = np.diff(centers)
     diffs = diffs[(diffs > 1e-4) & (diffs < 0.15)]
     if len(diffs) == 0:
         return 0.02
-    typical = float(np.median(diffs))
-    upper = float(np.percentile(diffs, 95))
-    if upper > max(0.02, 4.0 * typical):
-        station = diffs[diffs >= 0.5 * upper]
-        if len(station) >= 3:
-            return float(np.median(station))
-    return typical
+    return float(np.median(diffs))
 
 
 def _outer_inlier(sorted_pts: np.ndarray, side: str, pitch: float) -> float:
@@ -532,29 +555,33 @@ def _outer_inlier(sorted_pts: np.ndarray, side: str, pitch: float) -> float:
 
 
 def _continuous_jambs(along: np.ndarray, heights: np.ndarray, coarse_left: float, coarse_right: float):
-    """Move a bin-edge gap onto the wall returns on either side.
+    """Place each jamb halfway to the next missing wall column.
 
-    The 5 cm histogram only decides that a gap exists. Its edges sit on the
-    grid, so a jamb that falls mid-bin is off by up to one bin on each side.
-    The boundary used for the width is the last door-band return on the left
-    flank and the first on the right, shifted half a sample spacing into the
-    gap. That half-spacing is the average distance from the last return to
-    the surface edge. A single speck inside the opening is peeled off first.
-
-    Returns (left, right, sigma). Sigma is half the local spacing: a coarse
-    cloud cannot support a tighter edge than that.
+    The 5 cm histogram only decides that a gap exists. The width then comes
+    from the column centers beside the gap. The true jamb is not a measured
+    point: it sits somewhere between the last column still on the wall and
+    the first column that did not return. With nothing observed inside that
+    step, the midpoint is the estimate, and the leftover error can be as
+    large as half a column on each side. Sigma is that half-step. A speck
+    sitting alone in the opening is peeled off before the midpoint is taken.
     """
     door = (heights > 0.35) & (heights < 1.65)
     samples = along[door] if int(door.sum()) >= 6 else along
     mid = 0.5 * (coarse_left + coarse_right)
-    left = np.sort(samples[(samples < mid) & (samples > coarse_left - 0.30)])
-    right = np.sort(samples[(samples > mid) & (samples < coarse_right + 0.30)])
+    # A longer flank gives a stabler column spacing. The jamb is still the
+    # center nearest the gap, not an average of the whole wall.
+    left = np.sort(samples[(samples < mid) & (samples > coarse_left - 0.80)])
+    right = np.sort(samples[(samples > mid) & (samples < coarse_right + 0.80)])
     if len(left) < 3 or len(right) < 3:
         return float(coarse_left), float(coarse_right), 0.025
-    pitch_l = _local_pitch(left)
-    pitch_r = _local_pitch(right)
-    left_edge = _outer_inlier(left, "high", pitch_l) + 0.5 * pitch_l
-    right_edge = _outer_inlier(right, "low", pitch_r) - 0.5 * pitch_r
+    left_centers = _station_centers(left)
+    right_centers = _station_centers(right)
+    if len(left_centers) < 3 or len(right_centers) < 3:
+        return float(coarse_left), float(coarse_right), 0.025
+    pitch_l = _local_pitch(left_centers)
+    pitch_r = _local_pitch(right_centers)
+    left_edge = _outer_inlier(left_centers, "high", pitch_l) + 0.5 * pitch_l
+    right_edge = _outer_inlier(right_centers, "low", pitch_r) - 0.5 * pitch_r
     # Stay next to the bin that found the gap. A jump larger than this means
     # the points and the histogram disagree, and the bin edge is safer.
     if left_edge < coarse_left - 0.15 or left_edge > coarse_left + 0.15:
