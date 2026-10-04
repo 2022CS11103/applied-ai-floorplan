@@ -10,6 +10,12 @@ python run.py run --capture single_room/c00a170fe1 --tier lidar --out runs/singl
 
 `self-check` builds a 4.00 m by 3.00 m by 2.50 m box with a door and checks the plan. It does not need the sample data. A LiDAR run on the supplied room finishes in about 20 seconds.
 
+```bash
+pytest
+```
+
+`pytest` reruns that synthetic check and, when `single_room/c00a170fe1` is on disk, the LiDAR command. The area check locks the current output. It is not a laser measurement.
+
 ## Sample data
 
 The company sample is local and is not in git (the depth images and video are hundreds of megabytes):
