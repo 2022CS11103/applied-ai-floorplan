@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Company sample captures are hundreds of MB. Keep them local.
+single_room/
+single_scan_with_ceiling/
+single_scan_floor_only/
+*.zip
+
+# Scratch from development
+_pdf_text.txt
+_*.png
+_*.npy
+_*.txt
+
+# Heavy intermediates
+runs/**/cloud.npy
+runs/**/debug_points.npy
