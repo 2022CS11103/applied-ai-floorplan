@@ -491,12 +491,89 @@ def _polygon_for_cell(left, right, bottom, top, x0, x1, y0, y1, theta, endpoint_
     return {"polygon": polygon, "walls": walls}
 
 
+def _local_pitch(sorted_pts: np.ndarray) -> float:
+    """Spacing from one wall column to the next, not the noise inside a column.
+
+    A lidar sheet drops many returns on the same station. The median gap is
+    then a few millimetres of noise, and a half-gap shift does nothing. When
+    the large gaps separate from that noise, the pitch is those column jumps.
+    A single return per station has no second scale, and the median gap is
+    the pitch.
+    """
+    if len(sorted_pts) < 3:
+        return 0.02
+    diffs = np.diff(sorted_pts)
+    diffs = diffs[(diffs > 1e-4) & (diffs < 0.15)]
+    if len(diffs) == 0:
+        return 0.02
+    typical = float(np.median(diffs))
+    upper = float(np.percentile(diffs, 95))
+    if upper > max(0.02, 4.0 * typical):
+        station = diffs[diffs >= 0.5 * upper]
+        if len(station) >= 3:
+            return float(np.median(station))
+    return typical
+
+
+def _outer_inlier(sorted_pts: np.ndarray, side: str, pitch: float) -> float:
+    """Jamb sample after peeling specks that sit alone inside the opening."""
+    pts = sorted_pts
+    limit = max(1.5 * pitch, 0.03)
+    peels = 0
+    if side == "high":
+        while len(pts) >= 2 and pts[-1] - pts[-2] > limit and peels < 3:
+            pts = pts[:-1]
+            peels += 1
+        return float(pts[-1])
+    while len(pts) >= 2 and pts[1] - pts[0] > limit and peels < 3:
+        pts = pts[1:]
+        peels += 1
+    return float(pts[0])
+
+
+def _continuous_jambs(along: np.ndarray, heights: np.ndarray, coarse_left: float, coarse_right: float):
+    """Move a bin-edge gap onto the wall returns on either side.
+
+    The 5 cm histogram only decides that a gap exists. Its edges sit on the
+    grid, so a jamb that falls mid-bin is off by up to one bin on each side.
+    The boundary used for the width is the last door-band return on the left
+    flank and the first on the right, shifted half a sample spacing into the
+    gap. That half-spacing is the average distance from the last return to
+    the surface edge. A single speck inside the opening is peeled off first.
+
+    Returns (left, right, sigma). Sigma is half the local spacing: a coarse
+    cloud cannot support a tighter edge than that.
+    """
+    door = (heights > 0.35) & (heights < 1.65)
+    samples = along[door] if int(door.sum()) >= 6 else along
+    mid = 0.5 * (coarse_left + coarse_right)
+    left = np.sort(samples[(samples < mid) & (samples > coarse_left - 0.30)])
+    right = np.sort(samples[(samples > mid) & (samples < coarse_right + 0.30)])
+    if len(left) < 3 or len(right) < 3:
+        return float(coarse_left), float(coarse_right), 0.025
+    pitch_l = _local_pitch(left)
+    pitch_r = _local_pitch(right)
+    left_edge = _outer_inlier(left, "high", pitch_l) + 0.5 * pitch_l
+    right_edge = _outer_inlier(right, "low", pitch_r) - 0.5 * pitch_r
+    # Stay next to the bin that found the gap. A jump larger than this means
+    # the points and the histogram disagree, and the bin edge is safer.
+    if left_edge < coarse_left - 0.15 or left_edge > coarse_left + 0.15:
+        left_edge = float(coarse_left)
+    if right_edge > coarse_right + 0.15 or right_edge < coarse_right - 0.15:
+        right_edge = float(coarse_right)
+    if right_edge - left_edge < 0.2:
+        return float(coarse_left), float(coarse_right), 0.025
+    sigma = 0.5 * max(pitch_l, pitch_r)
+    return float(left_edge), float(right_edge), float(sigma)
+
+
 def _openings_on_line(line: dict, a0: float, a1: float, wall_len: float, abs_floor: float) -> list[Opening]:
     """Gaps in the along-wall support, flanked on both sides.
 
     A missing end of a wall is an unscanned corner, not a door. Both
     flanks have to be present. Width is conservative on purpose: a phantom
-    opening counts the same as a miss.
+    opening counts the same as a miss. The histogram finds the gap; the
+    reported width uses the continuous jambs.
     """
     runs = sorted(line["runs"])
     if len(runs) < 2:
@@ -519,23 +596,23 @@ def _openings_on_line(line: dict, a0: float, a1: float, wall_len: float, abs_flo
             continue
         prof = _height_profile(heights, along, gap0, gap1)
         # empty through the door band: very few mid-height returns
-        flank_mid = 1
-        # compare with a flank slice
         flank = _height_profile(heights, along, a, b)
         if flank["mid"] > 20 and prof["mid"] > 0.25 * flank["mid"]:
+            continue
+        edge_l, edge_r, edge_sigma = _continuous_jambs(along, heights, gap0, gap1)
+        width = edge_r - edge_l
+        if width < 0.68 or width > 1.20:
             continue
         kind = "door"
         sill = 0.0
         head = None
         if prof["low"] > prof["mid"] and prof["low"] > 8 and prof["high"] > 8:
             kind = "window"
-            sill = prof["p90"] if prof["p10"] is not None and prof["low"] > prof["mid"] else None
-            # sill is the top of the low cluster: approximate with 0.7 if low points exist
             sill = 0.85 if prof["low"] > 8 else None
             head = None
-        sigma = max(0.02, abs_floor)
+        sigma = max(edge_sigma, 0.005, abs_floor * 0.5)
         openings.append(
-            Opening(kind=kind, width=float(width), sigma=sigma, along0=float(gap0), along1=float(gap1), sill=sill, head=head)
+            Opening(kind=kind, width=float(width), sigma=float(sigma), along0=float(edge_l), along1=float(edge_r), sill=sill, head=head)
         )
     return openings
 
