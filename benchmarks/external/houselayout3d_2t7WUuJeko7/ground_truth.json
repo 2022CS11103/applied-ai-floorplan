@@ -1,0 +1,490 @@
+{
+  "case_id": "houselayout3d_2t7WUuJeko7",
+  "tier": "lidar",
+  "evaluator_only": false,
+  "label": "EXTERNAL DATASET VALIDATION \u2014 HouseLayout3D CAD annotation derived from Matterport3D. Not laser/tape. Not the company physical benchmark.",
+  "external_dataset": {
+    "name": "HouseLayout3D",
+    "scene_id": "2t7WUuJeko7",
+    "url": "https://huggingface.co/datasets/houselayout3d/HouseLayout3D",
+    "license": "MIT",
+    "underlying_scans": "Matterport3D, not redistributed in this Hugging Face release",
+    "replaces_company_physical_benchmark": false
+  },
+  "coordinate_frame": {
+    "up": "+Z",
+    "units": "metres",
+    "horizontal_axes": [
+      "X",
+      "Y"
+    ],
+    "note": "Dataset frame. Not converted into the logger's Y-up frame."
+  },
+  "calibration": {
+    "scale": "unavailable",
+    "reason": "CAD metres come from a Matterport reconstruction, not a tape measured for this assignment"
+  },
+  "footprint_m2": 77.2263,
+  "footprint_note": "Sum of derived floor-polygon areas on this scene. Not a surveyed footprint.",
+  "rooms": [
+    {
+      "room_id": "2t7WUuJeko7_floor_00",
+      "ceiling_height_m": 3.353,
+      "walls": [
+        {
+          "wall_id": "2t7WUuJeko7_floor_00_e1",
+          "length_m": 3.8041,
+          "entity_index": 1,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_00_e2",
+          "length_m": 3.1302,
+          "entity_index": 2,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_00_e3",
+          "length_m": 3.8298,
+          "entity_index": 3,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_00_e4",
+          "length_m": 3.0986,
+          "entity_index": 4,
+          "derived": true
+        }
+      ],
+      "openings": [
+        {
+          "opening_id": "door_0",
+          "wall_id": "2t7WUuJeko7_floor_00_e4",
+          "width_m": 0.7589,
+          "class": "door"
+        },
+        {
+          "opening_id": "window_0",
+          "wall_id": "2t7WUuJeko7_floor_00_e1",
+          "width_m": 0.7218,
+          "class": "window"
+        },
+        {
+          "opening_id": "window_3",
+          "wall_id": "2t7WUuJeko7_floor_00_e2",
+          "width_m": 0.6722,
+          "class": "window"
+        },
+        {
+          "opening_id": "window_4",
+          "wall_id": "2t7WUuJeko7_floor_00_e3",
+          "width_m": 0.6679,
+          "class": "window"
+        }
+      ],
+      "floor_area_m2": 11.8699,
+      "entity_index": 5,
+      "room_id_source": "derived_from_floor_polygon"
+    },
+    {
+      "room_id": "2t7WUuJeko7_floor_01",
+      "ceiling_height_m": 3.3583,
+      "walls": [
+        {
+          "wall_id": "2t7WUuJeko7_floor_01_e7",
+          "length_m": 1.3384,
+          "entity_index": 7,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_01_e8",
+          "length_m": 3.044,
+          "entity_index": 8,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_01_e9",
+          "length_m": 1.3427,
+          "entity_index": 9,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_01_e10",
+          "length_m": 3.0717,
+          "entity_index": 10,
+          "derived": true
+        }
+      ],
+      "openings": [
+        {
+          "opening_id": "door_1",
+          "wall_id": "2t7WUuJeko7_floor_01_e9",
+          "width_m": 0.7602,
+          "class": "door"
+        },
+        {
+          "opening_id": "door_5",
+          "wall_id": "2t7WUuJeko7_floor_01_e7",
+          "width_m": 0.9397,
+          "class": "door"
+        }
+      ],
+      "floor_area_m2": 4.0794,
+      "entity_index": 11,
+      "room_id_source": "derived_from_floor_polygon"
+    },
+    {
+      "room_id": "2t7WUuJeko7_floor_02",
+      "ceiling_height_m": 3.3418,
+      "walls": [
+        {
+          "wall_id": "2t7WUuJeko7_floor_02_e17",
+          "length_m": 1.4227,
+          "entity_index": 17,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_02_e18",
+          "length_m": 3.3072,
+          "entity_index": 18,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_02_e19",
+          "length_m": 1.4032,
+          "entity_index": 19,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_02_e20",
+          "length_m": 3.2716,
+          "entity_index": 20,
+          "derived": true
+        }
+      ],
+      "openings": [
+        {
+          "opening_id": "window_2",
+          "wall_id": "2t7WUuJeko7_floor_02_e19",
+          "width_m": 0.6769,
+          "class": "window"
+        }
+      ],
+      "floor_area_m2": 4.6856,
+      "entity_index": 21,
+      "room_id_source": "derived_from_floor_polygon"
+    },
+    {
+      "room_id": "2t7WUuJeko7_floor_03",
+      "ceiling_height_m": 3.3455,
+      "walls": [
+        {
+          "wall_id": "2t7WUuJeko7_floor_03_e27",
+          "length_m": 1.7657,
+          "entity_index": 27,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_03_e28",
+          "length_m": 2.4846,
+          "entity_index": 28,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_03_e29",
+          "length_m": 7.4762,
+          "entity_index": 29,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_03_e30",
+          "length_m": 1.4205,
+          "entity_index": 30,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_03_e31",
+          "length_m": 1.764,
+          "entity_index": 31,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_03_e32",
+          "length_m": 1.4798,
+          "entity_index": 32,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_03_e33",
+          "length_m": 6.2309,
+          "entity_index": 33,
+          "derived": true
+        }
+      ],
+      "openings": [
+        {
+          "opening_id": "door_2",
+          "wall_id": "2t7WUuJeko7_floor_03_e29",
+          "width_m": 0.7552,
+          "class": "door"
+        },
+        {
+          "opening_id": "window_5",
+          "wall_id": "2t7WUuJeko7_floor_03_e30",
+          "width_m": 0.8517,
+          "class": "window"
+        },
+        {
+          "opening_id": "window_6",
+          "wall_id": "2t7WUuJeko7_floor_03_e31",
+          "width_m": 1.096,
+          "class": "window"
+        },
+        {
+          "opening_id": "window_7",
+          "wall_id": "2t7WUuJeko7_floor_03_e32",
+          "width_m": 0.8365,
+          "class": "window"
+        },
+        {
+          "opening_id": "window_8",
+          "wall_id": "2t7WUuJeko7_floor_03_e33",
+          "width_m": 0.8201,
+          "class": "window"
+        }
+      ],
+      "floor_area_m2": 30.3064,
+      "entity_index": 34,
+      "room_id_source": "derived_from_floor_polygon"
+    },
+    {
+      "room_id": "2t7WUuJeko7_floor_04",
+      "ceiling_height_m": 3.3643,
+      "walls": [
+        {
+          "wall_id": "2t7WUuJeko7_floor_04_e40",
+          "length_m": 3.063,
+          "entity_index": 40,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_04_e41",
+          "length_m": 3.7557,
+          "entity_index": 41,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_04_e42",
+          "length_m": 3.0508,
+          "entity_index": 42,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_04_e43",
+          "length_m": 3.7492,
+          "entity_index": 43,
+          "derived": true
+        }
+      ],
+      "openings": [
+        {
+          "opening_id": "door_3",
+          "wall_id": "2t7WUuJeko7_floor_04_e41",
+          "width_m": 0.7507,
+          "class": "door"
+        },
+        {
+          "opening_id": "window_9",
+          "wall_id": "2t7WUuJeko7_floor_04_e40",
+          "width_m": 0.6659,
+          "class": "window"
+        },
+        {
+          "opening_id": "window_10",
+          "wall_id": "2t7WUuJeko7_floor_04_e42",
+          "width_m": 0.929,
+          "class": "window"
+        },
+        {
+          "opening_id": "window_11",
+          "wall_id": "2t7WUuJeko7_floor_04_e43",
+          "width_m": 1.0092,
+          "class": "window"
+        }
+      ],
+      "floor_area_m2": 11.4815,
+      "entity_index": 44,
+      "room_id_source": "derived_from_floor_polygon"
+    },
+    {
+      "room_id": "2t7WUuJeko7_floor_05",
+      "ceiling_height_m": 3.3484,
+      "walls": [
+        {
+          "wall_id": "2t7WUuJeko7_floor_05_e50",
+          "length_m": 1.1174,
+          "entity_index": 50,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_05_e51",
+          "length_m": 1.1608,
+          "entity_index": 51,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_05_e52",
+          "length_m": 2.6238,
+          "entity_index": 52,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_05_e53",
+          "length_m": 4.2661,
+          "entity_index": 53,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_05_e54",
+          "length_m": 3.7454,
+          "entity_index": 54,
+          "derived": true
+        },
+        {
+          "wall_id": "2t7WUuJeko7_floor_05_e55",
+          "length_m": 3.1595,
+          "entity_index": 55,
+          "derived": true
+        }
+      ],
+      "openings": [
+        {
+          "opening_id": "door_4",
+          "wall_id": "2t7WUuJeko7_floor_05_e53",
+          "width_m": 0.7632,
+          "class": "door"
+        },
+        {
+          "opening_id": "window_12",
+          "wall_id": "2t7WUuJeko7_floor_05_e52",
+          "width_m": 1.3027,
+          "class": "window"
+        },
+        {
+          "opening_id": "window_13",
+          "wall_id": "2t7WUuJeko7_floor_05_e53",
+          "width_m": 1.056,
+          "class": "window"
+        },
+        {
+          "opening_id": "window_14",
+          "wall_id": "2t7WUuJeko7_floor_05_e53",
+          "width_m": 0.604,
+          "class": "window"
+        }
+      ],
+      "floor_area_m2": 14.8035,
+      "entity_index": 56,
+      "room_id_source": "derived_from_floor_polygon"
+    }
+  ],
+  "adjacencies": [
+    {
+      "room_a": "2t7WUuJeko7_floor_00",
+      "room_b": "2t7WUuJeko7_floor_01",
+      "relationship": "door",
+      "source": "derived_from_door_normal",
+      "opening_id": "door_0"
+    },
+    {
+      "room_a": "2t7WUuJeko7_floor_01",
+      "room_b": "2t7WUuJeko7_floor_02",
+      "relationship": "door",
+      "source": "derived_from_door_normal",
+      "opening_id": "door_1"
+    },
+    {
+      "room_a": "2t7WUuJeko7_floor_01",
+      "room_b": "2t7WUuJeko7_floor_03",
+      "relationship": "door",
+      "source": "derived_from_door_normal",
+      "opening_id": "door_2"
+    },
+    {
+      "room_a": "2t7WUuJeko7_floor_03",
+      "room_b": "2t7WUuJeko7_floor_04",
+      "relationship": "door",
+      "source": "derived_from_door_normal",
+      "opening_id": "door_3"
+    }
+  ],
+  "excluded_horizontal_polygons": [
+    {
+      "entity_index": 13,
+      "area_m2": 0.0885,
+      "field_status": "DERIVED_FROM_DATASET",
+      "used_as_room": false,
+      "assumption": "adapter excluded horizontal polygons under 1.5 m^2. HouseLayout3D does not label these as doors or as rooms."
+    },
+    {
+      "entity_index": 23,
+      "area_m2": 0.1145,
+      "field_status": "DERIVED_FROM_DATASET",
+      "used_as_room": false,
+      "assumption": "adapter excluded horizontal polygons under 1.5 m^2. HouseLayout3D does not label these as doors or as rooms."
+    },
+    {
+      "entity_index": 36,
+      "area_m2": 0.1039,
+      "field_status": "DERIVED_FROM_DATASET",
+      "used_as_room": false,
+      "assumption": "adapter excluded horizontal polygons under 1.5 m^2. HouseLayout3D does not label these as doors or as rooms."
+    },
+    {
+      "entity_index": 46,
+      "area_m2": 0.1025,
+      "field_status": "DERIVED_FROM_DATASET",
+      "used_as_room": false,
+      "assumption": "adapter excluded horizontal polygons under 1.5 m^2. HouseLayout3D does not label these as doors or as rooms."
+    },
+    {
+      "entity_index": 58,
+      "area_m2": 0.1211,
+      "field_status": "DERIVED_FROM_DATASET",
+      "used_as_room": false,
+      "assumption": "adapter excluded horizontal polygons under 1.5 m^2. HouseLayout3D does not label these as doors or as rooms."
+    }
+  ],
+  "openings_not_scored": [
+    {
+      "opening_id": "window_1",
+      "class": "window",
+      "horizontal_edge_m": 0.0912,
+      "field_status": "PROVIDED_BY_DATASET",
+      "used_as_opening_width": false,
+      "assumption": "Paper states doors are annotated in both the open and closed positions. This quad's horizontal edge is under 0.4 m, so the adapter does not treat it as the opening width."
+    }
+  ],
+  "field_status": {
+    "scene_id": "PROVIDED_BY_DATASET",
+    "door_window_vertices": "PROVIDED_BY_DATASET",
+    "opening_width_m": "DERIVED_FROM_DATASET",
+    "room_id": "DERIVED_FROM_DATASET",
+    "wall_length_m": "DERIVED_FROM_DATASET",
+    "floor_area_m2": "DERIVED_FROM_DATASET",
+    "ceiling_height_m": "DERIVED_FROM_DATASET",
+    "adjacency": "DERIVED_FROM_DATASET",
+    "rgb_depth_point_cloud": "UNAVAILABLE",
+    "laser_tape": "UNAVAILABLE",
+    "repeat_capture": "UNAVAILABLE",
+    "imu": "UNAVAILABLE"
+  },
+  "not_in_release": [
+    "rgb_images",
+    "depth",
+    "point_cloud",
+    "matterport_room_ids",
+    "repeat_capture",
+    "pose_drift_ablation"
+  ]
+}

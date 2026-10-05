@@ -15,6 +15,9 @@ _*.png
 _*.npy
 _*.txt
 
+# Downloaded external dataset samples. The derived fixture is under benchmarks/external.
+datasets/_inspect/
+
 # Heavy intermediates
 runs/**/cloud.npy
 runs/**/debug_points.npy

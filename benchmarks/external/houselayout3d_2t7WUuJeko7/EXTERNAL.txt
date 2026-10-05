@@ -1,0 +1,15 @@
+EXTERNAL DATASET VALIDATION
+
+Source: HouseLayout3D scene 2t7WUuJeko7
+https://huggingface.co/datasets/houselayout3d/HouseLayout3D
+License of this annotation release: MIT
+Underlying scans: Matterport3D. Those RGB-D frames are not in the Hugging Face release and are not redistributed here.
+
+This file is not laser or tape ground truth.
+It does not replace the company physical benchmark.
+Room ids are floor polygons from the CAD release, not Matterport region ids.
+Door links are derived by stepping along the published door normal.
+Assessment gates stay blocked until a tape survey exists.
+
+Rebuild:
+python -m datasets.houselayout3d_adapter --scene datasets/_inspect/houselayout3d/2t7WUuJeko7 --out benchmarks/external/houselayout3d_2t7WUuJeko7/ground_truth.json
