@@ -1,0 +1,37 @@
+{
+  "field_status": "DERIVED_FROM_DATASET",
+  "derivation": "two Apple walks of one visit, each run through the unchanged LiDAR pipeline",
+  "video_a": "42444949",
+  "video_b": "42444946",
+  "rooms_a": 1,
+  "rooms_b": 1,
+  "rows": [
+    {
+      "predicted_m": 4.0252,
+      "reference_m": 4.1223,
+      "absolute_error_m": 0.0971,
+      "relative_error": 0.0236
+    },
+    {
+      "predicted_m": 4.0252,
+      "reference_m": 4.1223,
+      "absolute_error_m": 0.0971,
+      "relative_error": 0.0236
+    },
+    {
+      "predicted_m": 3.7099,
+      "reference_m": 3.6946,
+      "absolute_error_m": 0.0153,
+      "relative_error": 0.0041
+    },
+    {
+      "predicted_m": 3.7099,
+      "reference_m": 3.6946,
+      "absolute_error_m": 0.0153,
+      "relative_error": 0.0041
+    }
+  ],
+  "median_abs_error_m": 0.0562,
+  "assessment_threshold": "<= 1 cm or 0.5% per wall. This pair is not the assessment protocol and is not tape.",
+  "assessment_gate": "blocked"
+}

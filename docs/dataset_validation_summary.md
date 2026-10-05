@@ -4,21 +4,21 @@ The assessment is not fully benchmarked. The gates that need a tape, a second ph
 
 ## Best datasets
 
-1. The company captures, for proving the LiDAR command on real depth, poses, intrinsics, and IMU.
-2. HouseLayout3D annotations, for an external wall and opening drawing. One scene was converted and labeled derived.
-3. ARKitScenes and ScanNet++, if access and disk allow later. They match a phone walk. They still do not replace tape.
+1. ARKitScenes videos `42444949` and `42444946` (visit `421337`): real Apple LiDAR plus FARO depth, and two walks of one venue.
+2. The company captures, for the LiDAR command on the bundle the assessment shipped, including IMU.
+3. HouseLayout3D annotations, for an external wall and opening drawing. One scene was converted and labeled derived.
 4. ZInD and LaserDoors, after their approval steps, for layout boxes and single-door widths. Neither is a LiDAR walk.
 
 ## Coverage
 
 | Need | Public set that has it | Ran here |
 | --- | --- | --- |
-| Phone depth + poses | ARKitScenes, ScanNet++, company sample | company sample only |
+| Phone depth + poses | ARKitScenes, ScanNet++, company sample | company sample and two ARKitScenes videos |
 | Video frames + poses | company sample, Redwood, ScanNet | company sample only |
 | 2–8 pinhole stills per room | not found | synthetic fixture only |
 | Vector openings | HouseLayout3D, ZInD, LaserDoors, Structured3D | HouseLayout3D annotations only |
-| Laser or tape on the same walk as the phone | not in any set downloaded | no |
-| Repeated walk of the same room | not in the sets above | even/odd proxy only |
+| Laser depth on the same walk as the phone | ARKitScenes `highres_depth` | two videos. Depth, not a tape of each wall |
+| Repeated walk of the same room | ARKitScenes visit 421337 | both videos ran |
 | Incumbent export | none | no |
 
 ## What works
@@ -28,13 +28,16 @@ The assessment is not fully benchmarked. The gates that need a tape, a second ph
 - LiDAR on `1a8384c3f6`: status ok, 1 room, 3.381 m². The earlier empty plan was a wall filter dropping the long supported lines.
 - Photo stitch on the synthetic 4-room fixture: status ok, overlap 0. Scale is the 1.40 m prior.
 - HouseLayout3D adapter writes a blocked external case and lists the polygons it refused to call rooms.
+- ARKitScenes LiDAR on both videos: status ok, one room each, about 4.0 m by 3.7 m, ceiling about 3.03 m. Floor tilt after the Z-up to Y-up axis swap is 0.33° and 0.16°. On `42444949` the phone area and the FARO-layout area differ by 0.020 m².
 
 ## What fails
 
 - Video on both company captures: `no_room_closure`.
-- Opening width on the synthetic door: 6.3 cm, and 54.8% of synthetic openings within 2 cm.
-- Every centimetre gate, because no tape exists.
-- Drift as an accuracy claim: the on/off footprints differ, which shows the anchor moves the plan, and does not show which one is true.
+- Opening width on the synthetic door: 6.3 cm, and 54.8% of synthetic openings within 2 cm. ARKitScenes does not publish door widths, and neither plan emitted an opening.
+- Ceiling against the FARO height peak: 5.4 cm on `42444949` and 4.5 cm on `42444946`. The 1.5 cm bar is missed. The peak is a histogram of laser depth, not a tape, so the assessment gate stays blocked.
+- Repeatability of the two walks: the long wall moves 9.7 cm (2.4%). That misses 1 cm and 0.5%. The short wall moves 1.5 cm (0.41%), which is inside 0.5% and outside 1 cm.
+- On `42444946` the FARO cloud did not close a room, so there is no laser-side wall length for that walk.
+- Drift as an accuracy claim on the company sample: the on/off footprints differ, which shows the anchor moves the plan, and does not show which one is true. On `42444949` the anchor barely moved the footprint (14.933 m² vs 14.930 m²).
 
 ## Fixes in this tree
 
@@ -50,8 +53,8 @@ No opening, fusion, or video threshold was edited to manufacture a pass.
 | --- | --- |
 | One command, schema, CI, multi-room LiDAR plan | validated on the company sample |
 | Opening ≤2 cm on ≥85% | blocked, and the synthetic number fails |
-| Ceiling ≤1.5 cm and repeat spread ≤1 cm | blocked |
-| Repeatability ≤1 cm or 0.5% | blocked |
+| Ceiling ≤1.5 cm and repeat spread ≤1 cm | blocked as a tape gate. Measured FARO-peak errors are 5.4 cm and 4.5 cm. The two walks differ by 1.1 cm |
+| Repeatability ≤1 cm or 0.5% | not passed. Two ARKit walks of visit 421337 differ by 9.7 cm on the long wall. Not a tape protocol |
 | Video walls ≤3% | failed to produce a room on the only real video |
 | Photo ±8% and stitch | synthetic only; physical stills blocked |
 | Incumbent ≥70% | blocked |
@@ -59,7 +62,7 @@ No opening, fusion, or video threshold was edited to manufacture a pass.
 
 ## Still required before submission can claim the PDF gates
 
-- A tape or laser on the same walls, openings, and ceilings.
-- A second walk of one room.
+- A tape, or a vector survey, of openings. FARO depth does not label a door width.
 - Phone stills, 2–8 per room, for at least three rooms.
-- One Polycam or Magicplan export of that same capture.
+- One Polycam or Magicplan export of the same capture.
+- The ceiling and repeatability numbers above already miss their bars on this visit. A tape would not be expected to turn a 5 cm ceiling gap into a pass without a code change, and no threshold was loosened to hide that.

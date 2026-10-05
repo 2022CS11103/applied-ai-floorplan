@@ -1,0 +1,117 @@
+{
+  "label": "EXTERNAL LASER DEPTH \u2014 ARKitScenes highres_depth, projected from a FARO mesh. Lengths below are derived by this repo's layout extractor. Not laser/tape.",
+  "video_id": "42444949",
+  "pipeline_status": "ok",
+  "assessment_gate": {
+    "status": "blocked",
+    "reason": "FARO highres_depth is laser depth, not a tape of each wall, opening, and ceiling. The assessment gate stays blocked."
+  },
+  "phone_rooms": 1,
+  "faro_layout_rooms": 1,
+  "phone_wall_lengths_m": [
+    4.0252,
+    3.7099,
+    4.0252,
+    3.7099
+  ],
+  "faro_layout_wall_lengths_m": [
+    4.1061,
+    3.6416,
+    4.1061,
+    3.6416
+  ],
+  "wall_match": {
+    "field_status": "DERIVED_FROM_DATASET",
+    "derivation": "same build_layout on the phone cloud and on the backprojected FARO depth",
+    "rows": [
+      {
+        "predicted_m": 4.0252,
+        "reference_m": 4.1061,
+        "absolute_error_m": 0.0809,
+        "relative_error": 0.0197
+      },
+      {
+        "predicted_m": 4.0252,
+        "reference_m": 4.1061,
+        "absolute_error_m": 0.0809,
+        "relative_error": 0.0197
+      },
+      {
+        "predicted_m": 3.7099,
+        "reference_m": 3.6416,
+        "absolute_error_m": 0.0683,
+        "relative_error": 0.0188
+      },
+      {
+        "predicted_m": 3.7099,
+        "reference_m": 3.6416,
+        "absolute_error_m": 0.0683,
+        "relative_error": 0.0188
+      }
+    ],
+    "median_abs_error_m": 0.0746
+  },
+  "floor_area_m2": {
+    "field_status": "DERIVED_FROM_DATASET",
+    "phone_sum": 14.9328,
+    "faro_layout_sum": 14.953,
+    "phone_rooms": [
+      14.9328
+    ],
+    "faro_rooms": [
+      14.953
+    ]
+  },
+  "ceiling": {
+    "phone_m": [
+      3.0357
+    ],
+    "faro_layout_m": [
+      3.0992
+    ],
+    "faro_histogram": {
+      "ceiling_height_m": 3.09,
+      "field_status": "DERIVED_FROM_DATASET",
+      "derivation": "20 mm histogram peak of FARO points above 1.8 m after the floor anchor",
+      "peak_count": 4896,
+      "points": 155591
+    },
+    "rows": [
+      {
+        "predicted_m": 3.0357,
+        "faro_histogram_m": 3.09,
+        "absolute_error_m": 0.0543,
+        "within_1_5_cm": false
+      }
+    ]
+  },
+  "depth_agreement": {
+    "status": "measured",
+    "field_status": "PROVIDED_BY_DATASET",
+    "frames": 8,
+    "pixels": 3070,
+    "median_abs_m": 0.024,
+    "p90_abs_m": 0.065,
+    "note": "Apple lowres depth against FARO highres_depth. Not a wall length."
+  },
+  "faro_cloud": {
+    "frames_used": 70,
+    "frames_skipped_no_pose": 0,
+    "points": 155591,
+    "field_status": "DERIVED_FROM_DATASET",
+    "derivation": "highres_depth backprojected with the lowres pincam scaled by the image-size ratio, then a 3 cm voxel",
+    "assumption": "highres_depth is the same wide camera as lowres_wide, so intrinsics scale with resolution. Apple does not ship a separate wide pincam in the raw asset list."
+  },
+  "phone_floor_tilt_deg": 0.332,
+  "faro_floor_tilt_deg": 0.305,
+  "openings": {
+    "field_status": "UNAVAILABLE",
+    "reason": "ARKitScenes 3DOD labels are furniture boxes, not door or window widths."
+  },
+  "imu": {
+    "field_status": "UNAVAILABLE"
+  },
+  "repeat_capture": {
+    "field_status": "see visit pair when a second video of the same visit was run"
+  }
+}

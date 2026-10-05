@@ -1,0 +1,8 @@
+Two ARKitScenes walks of visit 421337: videos 42444949 and 42444946.
+
+repeatability.json compares the two LiDAR plans with each other.
+It is not a tape, and the assessment gate stays blocked.
+
+Per-video FARO comparisons:
+benchmarks/external/arkitscenes_42444949/comparison.json
+benchmarks/external/arkitscenes_42444946/comparison.json

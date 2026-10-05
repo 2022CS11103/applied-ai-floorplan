@@ -1,0 +1,4 @@
+ARKitScenes real Apple LiDAR compared with FARO highres_depth.
+Wall lengths on the FARO side are derived by this repo's layout code.
+That is not a tape, and the assessment gate stays blocked.
+Rebuild from datasets\_inspect\arkitscenes\42444946 and runs\arkitscenes_42444946\plan.json.

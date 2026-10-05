@@ -27,13 +27,18 @@ Root cause of the video failure: sequential frame decode matches the pose timest
 
 | Dataset | Scene | Tier | Input | GT | Command | Status | Result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| ARKitScenes | 42444949, visit 421337 | lidar | Apple lowres depth, confidence, pincam, traj. No IMU, no RGB video. | FARO `highres_depth` (laser depth in the camera). Not a vector plan. | `python run.py run --capture datasets\_inspect\arkitscenes\capture\42444949 --tier lidar` | PARTIAL | 26.4 s. status ok, 1 room, 4.025 m by 3.710 m, area 14.933 m², ceiling 3.036 m. Same extractor on the FARO cloud: 4.106 m by 3.642 m, area 14.953 m², ceiling peak 3.090 m. Wall error 6.8–8.1 cm (about 2%). Area error 0.020 m². Ceiling error 5.4 cm, outside 1.5 cm. Apple-vs-FARO depth median 2.4 cm. Openings unavailable. Assessment gate blocked. |
+| ARKitScenes | 42444946, same visit | lidar | same | same | `--capture ...\42444946 --tier lidar` | PARTIAL | 20.4 s. status ok, 1 room, 4.122 m by 3.695 m, area 15.230 m², ceiling 3.025 m. FARO height peak 3.070 m, error 4.5 cm. FARO cloud did not close a room: Manhattan theta 67.5°, 1 vertical line and 2 horizontal, so the extractor refused a room. The phone cloud at 68.5° had 2 and 2 and closed. Wall length versus that FARO cloud is unmatched. Depth median 2.1 cm. |
+| ARKitScenes | visit 421337, both videos | lidar repeat | two walks | each other, not tape | both commands above | FAIL | Long walls differ by 9.7 cm (2.4%). Short walls differ by 1.5 cm (0.41%). The 1 cm or 0.5% bar fails on the long wall. Ceiling spread 1.1 cm. |
 | HouseLayout3D | 2t7WUuJeko7 | not a pipeline tier | doors, windows, layout PLY, plane equations | external CAD, derived | `python -m datasets.houselayout3d_adapter` | PARTIAL | 6 floor polygons kept, smaller horizontals listed and not called rooms, 4 door links. `assessment_gate` blocked. No `run.py` call, because RGB and depth are not in the release. |
+
+The FARO wall lengths are `DERIVED_FROM_DATASET`: the same `build_layout` ran on points backprojected from `highres_depth`. That checks whether the phone cloud and the laser depth describe one rectangle. It does not certify a tape.
 
 ## Not executed
 
 | Dataset | Why |
 | --- | --- |
-| ARKitScenes | 3DOD low-res pack is 623.4 GB. No anonymous room-sized slice was published on the page checked. Downloading it would not add vector opening GT. |
+| ARKitScenes, rest of the release | Only videos 42444949 and 42444946 were downloaded. The 3DOD pack is 623.4 GB. These two do not contain door widths. |
 | ScanNet | `.sens` files require an approved request. |
 | ScanNet++ | iPhone and Faro files require an approved request. |
 | ZInD | Academic approval, about 40 GB of panoramas. Cannot be passed to the LiDAR tier. |
