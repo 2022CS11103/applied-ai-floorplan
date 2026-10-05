@@ -51,3 +51,23 @@ python run.py repeat --capture single_room/c00a170fe1 --out runs/repeat_after --
 python run.py run --capture single_room/c00a170fe1 --tier lidar --endpoints observed --out runs/single_room_before
 python run.py run --capture single_room/c00a170fe1 --tier lidar --endpoints intersections --out runs/single_room_lidar
 ```
+
+The pass in the table above is the even/odd proxy on one company walk. It is not the PDF repeatability gate. Two ARKit walks of visit 421337 still differ by 9.7 cm on the long wall.
+
+## Opening width, not closed
+
+Worst remaining physical gate: opening width ≤ 2 cm on ≥ 85%.
+
+Failing number: self-check door 0.863 m against 0.80 m (6.3 cm). One fused grid of the 62 synthetic openings is 39/62. There is no tape, so the PDF gate stays BLOCKED rather than PASS.
+
+Root cause, from the synthetic failure split: 19 openings leave the jamb in a gap between returns, 4 drop a wall column, and the old 3-hit rule missed 5 sparse bins. A second camera position supplies the missing return. A sparse bin is now a separate low-confidence candidate. The shipped LiDAR command still voxel-fuses before the opening detector, so those synthetic frame shifts are not the company-scan result.
+
+Evidence: `tests/test_opening_multiframe.py` and `docs/benchmark_report.md`. Before: 34/62 on one synthetic frame. After the sparse path: 39/62 on one frame. Five synthetic frames: 62/62. That synthetic schedule is not a real-gate fix. Reproduction: `python -m pytest tests/test_opening_multiframe.py`.
+
+## Assessment command, not a physical pass
+
+`python run.py assessment --manifest <path>` validates one property and writes `runs/assessment/<id>/`. The example manifest has no captures and no tape file, so every gate stays BLOCKED. A video room that does not close is DEGRADED. Neither state is a pass, and the synthetic five-frame opening result is not written into that report as a company measurement.
+
+## Ceiling, not closed
+
+Failing number: phone ceiling against the FARO height peak is 5.4 cm and 4.5 cm. The two walks differ by 1.1 cm. Both the 1.5 cm bar and the 1 cm spread are missed on that reference. No code change was applied to pull a ceiling onto the peak. Reproduction: `benchmarks/external/arkitscenes_42444949/comparison.json`.

@@ -470,6 +470,18 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("self-check", help="synthetic room with a known door")
 
+    bench = sub.add_parser("benchmark", help="score a manifest; missing physical inputs stay blocked")
+    bench.add_argument("--manifest", required=True, type=Path)
+    bench.add_argument("--out", type=Path, default=None)
+
+    gate = sub.add_parser("assessment-gate", help="PASS, FAIL, or BLOCKED for each PDF gate")
+    gate.add_argument("--manifest", required=True, type=Path)
+    gate.add_argument("--out", type=Path, default=None)
+
+    assess = sub.add_parser("assessment", help="validate one property and score every PDF gate")
+    assess.add_argument("--manifest", required=True, type=Path)
+    assess.add_argument("--out", type=Path, default=None)
+
     args = parser.parse_args(argv)
     if args.cmd == "self-check":
         result = self_check()
@@ -485,6 +497,34 @@ def main(argv: list[str] | None = None) -> None:
             loop=not args.no_loop,
         )
         print(f"wrote {args.out / 'plan.json'} status={doc['status']} rooms={len(doc['property']['rooms'])}")
+        return
+    if args.cmd == "assessment":
+        from .assessment_run import run_assessment
+
+        command = "python run.py assessment --manifest " + Path(args.manifest).name
+        try:
+            report = run_assessment(args.manifest, args.out, command=command)
+        except (ValueError, OSError) as exc:
+            print(f"assessment rejected: {exc}")
+            raise SystemExit(2) from exc
+        print(f"wrote {report['output_dir']}")
+        if report.get("rejected"):
+            print(report.get("reason"))
+            raise SystemExit(report.get("exit_code") or 2)
+        for name, item in report.get("gates", {}).items():
+            print(f"{name} {item['status']} {item['reason']}")
+        if report.get("exit_code"):
+            raise SystemExit(report["exit_code"])
+        return
+    if args.cmd in {"benchmark", "assessment-gate"}:
+        from .assessment import run_manifest_file
+
+        report = run_manifest_file(args.manifest, args.out)
+        print(f"wrote {report['output_dir']}")
+        for name, item in report["gates"].items():
+            print(f"{name} {item['status']} {item['reason']}")
+        if report["failed"]:
+            raise SystemExit(1)
         return
     if args.cmd == "repeat":
         summary = repeatability(args.capture, args.out, args.endpoints)

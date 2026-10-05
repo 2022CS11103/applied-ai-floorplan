@@ -1,0 +1,16 @@
+{
+  "property_id": "walkin_not_yet_captured",
+  "room_ids": [],
+  "lidar_capture": null,
+  "video_capture": null,
+  "photo_folder": null,
+  "repeat_capture": null,
+  "ground_truth": null,
+  "incumbent_export": null,
+  "damage_ground_truth": null,
+  "predictions": {
+    "openings": null,
+    "video": null
+  },
+  "note": "Paths stay empty until a laser or tape survey of the same rooms exists. Running this manifest reports BLOCKED. It does not invent measurements."
+}

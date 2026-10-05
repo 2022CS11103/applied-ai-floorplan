@@ -43,6 +43,69 @@ _OVERLAP_M2 = 0.05
 _IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png"}
 
 
+def validate_photo_capture(root: Path, expected_rooms: list[str] | None = None, calibration: dict | None = None) -> dict:
+    """Check a property folder before it is treated as a calibrated photo capture.
+
+    Fewer than 2 or more than 8 stills is a validation failure. The runtime
+    photo command still caps a 9th still at 8 for the existing fixture tests.
+    A 1.40 m chest-height prior is estimated calibration, not tape.
+    """
+    root = Path(root)
+    issues: list[dict] = []
+    rooms: list[dict] = []
+    if not root.is_dir():
+        issues.append({"code": "missing_root", "path": str(root)})
+        return {"ok": False, "issues": issues, "rooms": rooms, "calibration": _calibration_status(calibration)}
+    names_seen: dict[str, str] = {}
+    folders = room_folders(root)
+    found_ids = [folder.name for folder in folders]
+    for room_id in expected_rooms or []:
+        if room_id not in found_ids:
+            issues.append({"code": "missing_room", "room_id": room_id})
+    if not folders and not list_stills(root):
+        issues.append({"code": "missing_room", "room_id": root.name})
+    targets = folders or ([root] if root.is_dir() else [])
+    for folder in targets:
+        stills = [p for p in folder.iterdir() if p.is_file() and not p.name.startswith(".")] if folder.is_dir() else []
+        images = []
+        local_names: dict[str, int] = {}
+        for path in stills:
+            suffix = path.suffix.lower()
+            local_names[path.name] = local_names.get(path.name, 0) + 1
+            if suffix not in _IMAGE_SUFFIXES:
+                if path.name != "synthetic_walls.json" and path.name != "adjacency.json":
+                    issues.append({"code": "unsupported_format", "room_id": folder.name, "path": path.name})
+                continue
+            images.append(path)
+            other = names_seen.get(path.name)
+            if other is not None and other != folder.name:
+                issues.append({"code": "image_in_two_rooms", "name": path.name, "rooms": [other, folder.name]})
+            names_seen[path.name] = folder.name
+        for name, count in local_names.items():
+            if count > 1:
+                issues.append({"code": "duplicate_filename", "room_id": folder.name, "name": name})
+        if len(images) < 2:
+            issues.append({"code": "fewer_than_2", "room_id": folder.name, "count": len(images)})
+        if len(images) > 8:
+            issues.append({"code": "more_than_8", "room_id": folder.name, "count": len(images)})
+        rooms.append({"room_id": folder.name, "stills": len(images)})
+    cal = _calibration_status(calibration)
+    if not cal["is_physical"]:
+        issues.append({"code": "missing_calibration", "scale": cal["scale"], "reason": cal["reason"]})
+    return {"ok": not any(item["code"] != "missing_calibration" for item in issues) and cal["is_physical"], "issues": issues, "rooms": rooms, "calibration": cal}
+
+
+def _calibration_status(calibration: dict | None) -> dict:
+    if not calibration:
+        return {"scale": "unavailable", "is_physical": False, "reason": "no calibration metadata"}
+    scale = calibration.get("scale") or calibration.get("method")
+    if scale in {"laser", "tape", "survey", "measured"}:
+        return {"scale": scale, "is_physical": True, "reason": "calibration source can be scored"}
+    if scale in {"estimated", "chest_height_prior", "1.40m"}:
+        return {"scale": "estimated", "is_physical": False, "reason": "1.40 m chest-height prior is estimated, not tape"}
+    return {"scale": "unavailable", "is_physical": False, "reason": "calibration source is not laser, tape, or survey"}
+
+
 def list_stills(folder: Path) -> list[Path]:
     if not folder.is_dir():
         return []

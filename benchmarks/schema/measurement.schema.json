@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cozmo.local/measurement.schema.json",
+  "title": "Laser or tape measurement file",
+  "description": "faro and external_reference stay labelled as references. They do not satisfy a tape or laser gate.",
+  "type": "object",
+  "required": ["property_id", "capture_id", "source", "measurements"],
+  "properties": {
+    "property_id": {"type": "string"},
+    "capture_id": {"type": "string"},
+    "unit": {"enum": ["m", "m2"]},
+    "source": {"enum": ["laser", "tape", "survey", "faro", "external_reference"]},
+    "measurements": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/measurement"}
+    },
+    "openings": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/opening"}
+    },
+    "notes": {"type": "string"}
+  },
+  "$defs": {
+    "measurement": {
+      "type": "object",
+      "required": ["property_id", "room_id", "measurement_type", "value_m", "unit", "uncertainty_m", "source", "capture_id"],
+      "properties": {
+        "property_id": {"type": "string"},
+        "capture_id": {"type": "string"},
+        "room_id": {"type": "string"},
+        "wall_id": {"type": "string"},
+        "opening_id": {"type": "string"},
+        "surface_id": {"type": "string"},
+        "measurement_type": {"enum": ["wall_length", "opening_width", "ceiling_height", "floor_area"]},
+        "value_m": {"type": "number"},
+        "unit": {"enum": ["m", "m2"]},
+        "uncertainty_m": {"type": "number"},
+        "source": {
+          "enum": ["laser", "tape", "survey", "faro", "external_reference"],
+          "description": "faro and external_reference are labelled references. They do not satisfy a tape gate."
+        },
+        "timestamp": {"type": "string"},
+        "operator": {"type": "string"},
+        "notes": {"type": "string"},
+        "predicted_m": {"type": "number"},
+        "repeat_spread_m": {"type": "number"}
+      }
+    },
+    "opening": {
+      "type": "object",
+      "required": ["property_id", "opening_id", "room_id", "wall_id", "width_m", "unit", "uncertainty_m", "source", "capture_id"],
+      "properties": {
+        "property_id": {"type": "string"},
+        "opening_id": {"type": "string"},
+        "room_id": {"type": "string"},
+        "wall_id": {"type": "string"},
+        "type": {"type": "string"},
+        "width_m": {"type": "number"},
+        "unit": {"enum": ["m"]},
+        "uncertainty_m": {"type": "number"},
+        "source": {"enum": ["laser", "tape", "survey", "faro", "external_reference"]},
+        "capture_id": {"type": "string"}
+      }
+    }
+  }
+}

@@ -5,6 +5,8 @@ One command turns a capture folder into a dimensioned plan, a JSON file, and a c
 ```bash
 pip install -r requirements.txt
 python run.py self-check
+python run.py assessment-gate --manifest benchmarks/manifests/example.json
+python run.py assessment --manifest benchmarks/manifests/assessment.example.json
 python run.py run --capture single_room/c00a170fe1 --tier lidar --out runs/single_room_lidar
 ```
 
@@ -38,6 +40,41 @@ Photos are one folder of 2–8 stills per room. A property is the parent of thos
 Damage is a local color residual on a wall: `stain` or `moisture`, with area in square metres. A concealed flag is a written rule about that visible patch, not a view behind the wall. The only staged example is `fixtures/synthetic_damage`, and it is a synthetic test fixture, not physical ground truth. See `docs/damage.md`.
 
 The accuracy harness reads a `plan.json` and a separate ground-truth file. It does not rebuild the plan. Sample captures have no laser or tape file, so their report stays blocked. The cases under `benchmarks/fixtures/` only check the arithmetic. See `docs/benchmark.md`.
+
+## Assessment bundle
+
+When the company's captures and tape file are available, one command validates them and scores every gate:
+
+```bash
+python run.py assessment --manifest path/to/manifest.json
+```
+
+The manifest names one property. LiDAR, video, photos, the repeat walk, the tape file, the damage sheet, and a Polycam or Magicplan export must all carry that same `property_id`. A second property in the same manifest is rejected before any plan is built. The folder the manifest describes looks like this:
+
+```text
+assessment/
+    property/lidar/          depth, confidence, odometry.csv, camera_matrix.csv
+    property/video/          walkthrough.mp4, timestamps in order
+    property/photos/room_01/ 2 to 8 stills, and the same for room_02 and room_03
+    ground_truth/measurements.json
+    incumbent/polycam.json
+    repeats/
+```
+
+`benchmarks/manifests/assessment.example.json` is that shape with nothing filled in. Running it is BLOCKED, not a pass. Output lands in `runs/assessment/<property_id>/` as `validation.json`, one directory per tier, `benchmark.json`, `compliance.json`, `environment.json`, and `final_report.md`.
+
+A gate is PASS only when a tape, laser, or survey measurement exists and meets the bar. FAIL means the measurement exists and misses the bar. BLOCKED means the physical file is missing, the source is FARO or another external reference, or the photo scale is still the 1.40 m prior. DEGRADED means that tier ran and did not close a room; the command does not invent the missing lengths. The synthetic 62-opening schedule and the synthetic photo property stay in the tests. They are not this command's result.
+
+Reproduce the other checks the same way:
+
+```bash
+python run.py self-check
+python -m pytest -q
+python run.py repeat --capture single_room/c00a170fe1 --out runs/repeat_after --endpoints intersections
+python -m datasets.arkitscenes_reference
+```
+
+The repeat command on one company walk is an even/odd proxy. It is not the two-walk repeatability gate. ARKitScenes is a FARO reference, not a tape.
 
 ## Output
 

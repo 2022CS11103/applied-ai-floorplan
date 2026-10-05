@@ -1,0 +1,13 @@
+{
+  "property_id": "walkin_not_yet_captured",
+  "rooms": ["room_01", "room_02", "room_03"],
+  "connector": {"rooms": ["room_01", "room_02"], "relationship": "door"},
+  "lidar": {"path": "property/lidar", "property_id": "walkin_not_yet_captured"},
+  "video": {"path": "property/video", "property_id": "walkin_not_yet_captured"},
+  "photos": {"path": "property/photos", "property_id": "walkin_not_yet_captured"},
+  "repeat": {"path": "repeats/lidar_second_walk.json", "property_id": "walkin_not_yet_captured", "tier": "lidar"},
+  "ground_truth": {"path": "ground_truth/measurements.json", "property_id": "walkin_not_yet_captured"},
+  "damage": {"path": "ground_truth/damage.json", "property_id": "walkin_not_yet_captured"},
+  "incumbent": {"path": "incumbent/polycam.json", "property_id": "walkin_not_yet_captured"},
+  "note": "Drop the company's captures and tape file at these paths. Do not fill this example with invented measurements. A property_id that does not match is rejected."
+}

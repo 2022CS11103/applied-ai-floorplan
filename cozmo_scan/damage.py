@@ -234,33 +234,45 @@ def concealed_flags(rooms: list[dict]) -> list[dict]:
                 and d["extent_m2"]["value"] >= 0.04
                 for d in on_wall
             )
+            base_evidence = (
+                "stain or moisture intersects 0-0.30 m above the floor and covers at least 0.04 m^2"
+                if base_hit
+                else "no stain or moisture region met the base-of-wall predicate"
+            )
             flags.append(
                 {
                     "id": f"{wall['id']}_base_stain_moisture_path",
+                    "rule_id": "base_stain_moisture_path",
                     "surface_id": wall["id"],
+                    "surface": wall["id"],
                     "rule": "base_stain_moisture_path",
+                    "trigger": "stain or moisture, height_band start <= 0.30 m, extent >= 0.04 m^2",
+                    "confidence": 1.0 if base_hit else 0.0,
                     "fired": bool(base_hit),
-                    "evidence": (
-                        "stain or moisture intersects 0-0.30 m above the floor and covers at least 0.04 m^2"
-                        if base_hit
-                        else "no stain or moisture region met the base-of-wall predicate"
-                    ),
+                    "evidence": base_evidence,
+                    "reference": base_evidence,
                 }
             )
             sill_hit = False
             if windows and on_wall:
                 sill_hit = any(d["class"] in {"stain", "moisture"} and d["height_band_m"][1] >= 0.7 for d in on_wall)
+            sill_evidence = (
+                "a window is on this wall and a stain reaches the sill band"
+                if sill_hit
+                else "no window, or no stain in the sill band"
+            )
             flags.append(
                 {
                     "id": f"{wall['id']}_sill_stain_under_window",
+                    "rule_id": "sill_stain_under_window",
                     "surface_id": wall["id"],
+                    "surface": wall["id"],
                     "rule": "sill_stain_under_window",
+                    "trigger": "window on the wall and stain or moisture reaching 0.70 m",
+                    "confidence": 1.0 if sill_hit else 0.0,
                     "fired": bool(sill_hit),
-                    "evidence": (
-                        "a window is on this wall and a stain reaches the sill band"
-                        if sill_hit
-                        else "no window, or no stain in the sill band"
-                    ),
+                    "evidence": sill_evidence,
+                    "reference": sill_evidence,
                 }
             )
     return flags
@@ -276,16 +288,22 @@ def scope_items(rooms: list[dict]) -> list[dict]:
     for room in rooms:
         for d in room.get("damage", []):
             code, unit = catalog.get(d["class"], ("INSPECT", "m2"))
+            extent = d.get("extent_m2") or {}
             items.append(
                 {
                     "id": f"scope_{d['id']}",
+                    "room": room.get("id") or room.get("room_id"),
+                    "surface": d["surface_id"],
                     "surface_id": d["surface_id"],
                     "damage_id": d["id"],
                     "code": code,
+                    "category": code,
                     "class": d["class"],
-                    "quantity": d["extent_m2"]["value"],
+                    "quantity": extent.get("value"),
                     "unit": unit,
-                    "ci95": [d["extent_m2"]["ci95_low"], d["extent_m2"]["ci95_high"]],
+                    "evidence": d.get("id"),
+                    "confidence": extent.get("confidence"),
+                    "ci95": [extent.get("ci95_low"), extent.get("ci95_high")],
                 }
             )
     return items
