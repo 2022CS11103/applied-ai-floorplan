@@ -21,6 +21,7 @@ import numpy as np
 
 from . import __version__
 from .contract import apply_contract
+from .damage import concealed_flags, scope_items
 from .fuse import Cloud, align_floor
 from .geometry import shoelace
 from .layout import _rotate2, _shared_edge, build_layout, layout_to_dict
@@ -622,8 +623,8 @@ def _emit(
             "footprint_area_m2": round(footprint, 4),
             "manhattan_theta_deg": None,
         },
-        "scope_line_items": [],
-        "concealed_damage": [],
+        "scope_line_items": scope_items(rooms),
+        "concealed_damage": concealed_flags(rooms),
         "notes": notes,
     }
     document = apply_contract(document)

@@ -10,7 +10,7 @@
   "source": "synthetic_photo_fixture",
   "endpoint_mode": "intersections",
   "timing_s": {
-    "total_s": 0.721
+    "total_s": 0.191
   },
   "quality": {
     "images": 15,
@@ -1047,7 +1047,232 @@
     "manhattan_theta_deg": null
   },
   "scope_line_items": [],
-  "concealed_damage": [],
+  "concealed_damage": [
+    {
+      "id": "connector_w0_base_stain_moisture_path",
+      "surface_id": "connector_w0",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "connector_w0_sill_stain_under_window",
+      "surface_id": "connector_w0",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "connector_w1_base_stain_moisture_path",
+      "surface_id": "connector_w1",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "connector_w1_sill_stain_under_window",
+      "surface_id": "connector_w1",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "connector_w2_base_stain_moisture_path",
+      "surface_id": "connector_w2",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "connector_w2_sill_stain_under_window",
+      "surface_id": "connector_w2",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "connector_w3_base_stain_moisture_path",
+      "surface_id": "connector_w3",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "connector_w3_sill_stain_under_window",
+      "surface_id": "connector_w3",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_01_w0_base_stain_moisture_path",
+      "surface_id": "room_01_w0",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_01_w0_sill_stain_under_window",
+      "surface_id": "room_01_w0",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_01_w1_base_stain_moisture_path",
+      "surface_id": "room_01_w1",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_01_w1_sill_stain_under_window",
+      "surface_id": "room_01_w1",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_01_w2_base_stain_moisture_path",
+      "surface_id": "room_01_w2",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_01_w2_sill_stain_under_window",
+      "surface_id": "room_01_w2",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_01_w3_base_stain_moisture_path",
+      "surface_id": "room_01_w3",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_01_w3_sill_stain_under_window",
+      "surface_id": "room_01_w3",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_02_w0_base_stain_moisture_path",
+      "surface_id": "room_02_w0",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_02_w0_sill_stain_under_window",
+      "surface_id": "room_02_w0",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_02_w1_base_stain_moisture_path",
+      "surface_id": "room_02_w1",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_02_w1_sill_stain_under_window",
+      "surface_id": "room_02_w1",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_02_w2_base_stain_moisture_path",
+      "surface_id": "room_02_w2",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_02_w2_sill_stain_under_window",
+      "surface_id": "room_02_w2",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_02_w3_base_stain_moisture_path",
+      "surface_id": "room_02_w3",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_02_w3_sill_stain_under_window",
+      "surface_id": "room_02_w3",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_03_w0_base_stain_moisture_path",
+      "surface_id": "room_03_w0",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_03_w0_sill_stain_under_window",
+      "surface_id": "room_03_w0",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_03_w1_base_stain_moisture_path",
+      "surface_id": "room_03_w1",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_03_w1_sill_stain_under_window",
+      "surface_id": "room_03_w1",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_03_w2_base_stain_moisture_path",
+      "surface_id": "room_03_w2",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_03_w2_sill_stain_under_window",
+      "surface_id": "room_03_w2",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    },
+    {
+      "id": "room_03_w3_base_stain_moisture_path",
+      "surface_id": "room_03_w3",
+      "rule": "base_stain_moisture_path",
+      "fired": false,
+      "evidence": "no stain or moisture region met the base-of-wall predicate"
+    },
+    {
+      "id": "room_03_w3_sill_stain_under_window",
+      "surface_id": "room_03_w3",
+      "rule": "sill_stain_under_window",
+      "fired": false,
+      "evidence": "no window, or no stain in the sill band"
+    }
+  ],
   "notes": [
     "adjacency.json was not used; links come from room polygons",
     "synthetic/test fixture \u2014 not physical benchmark ground truth"

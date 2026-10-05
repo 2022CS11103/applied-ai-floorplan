@@ -191,5 +191,6 @@ def test_existing_photo_property_is_not_painted_with_damage(tmp_path):
     plan = run_one(ROOT / "fixtures" / "synthetic_photo_property", "photo", tmp_path / "out")
     assert plan["status"] == "ok"
     assert plan["scope_line_items"] == []
-    assert plan["concealed_damage"] == []
+    assert plan["concealed_damage"]
+    assert all(flag["fired"] is False for flag in plan["concealed_damage"])
     assert all(room["damage"] == [] for room in plan["property"]["rooms"])
