@@ -370,6 +370,11 @@ def build_layout(
             door_band = (hh > 0.35) & (hh < 1.65)
             runs = _support_runs(along[door_band] if int(door_band.sum()) >= 10 else along)
             support_len = sum(b - a for a, b, _ in runs)
+            # A jamb face sits just off the wall plane. Points in that band are
+            # not added to the wall run; they are the depth step used later.
+            full_depth = q[:, axis] - p["pos"]
+            full_along = q[:, 1 - axis]
+            step = (np.abs(full_depth) >= 0.07) & (np.abs(full_depth) <= 0.40) & (height > 0.35) & (height < 1.65)
             if support_len < 0.8 and endpoint_mode == "intersections":
                 # a short smear is clutter, unless we are in observed mode and it is the only evidence
                 if support_len < 0.7:
@@ -388,6 +393,8 @@ def build_layout(
                     "support_len": support_len,
                     "sigma": max(base_sigma, spread),
                     "n": int(band.sum()),
+                    "step_along": full_along[step],
+                    "step_depth": full_depth[step],
                 }
             )
         return out
@@ -566,43 +573,118 @@ def _outer_inlier(sorted_pts: np.ndarray, side: str, pitch: float) -> float:
     return float(pts[0])
 
 
-def _continuous_jambs(along: np.ndarray, heights: np.ndarray, coarse_left: float, coarse_right: float):
-    """Place each jamb halfway to the next missing wall column.
+def _reveal_along(on_sorted: np.ndarray, step_sorted: np.ndarray, side: str) -> float | None:
+    """Along-track position of the depth step beside one jamb.
 
-    The 5 cm histogram only decides that a gap exists. The width then comes
-    from the column centers beside the gap. The true jamb is not a measured
-    point: it sits somewhere between the last column still on the wall and
-    the first column that did not return. With nothing observed inside that
-    step, the midpoint is the estimate, and the leftover error can be as
-    large as half a column on each side. Sigma is that half-step. A speck
-    sitting alone in the opening is peeled off before the midpoint is taken.
+    The reveal is a second surface a few centimetres off the wall. When those
+    returns form a thin face, that face is the jamb. When they are the room
+    seen through the opening, the jamb is the boundary between the last
+    on-plane return and the first off-plane return. A single speck is ignored.
+    """
+    if len(on_sorted) < 3 or len(step_sorted) < 3:
+        return None
+    if side == "high":
+        last = float(on_sorted[-1])
+        window = step_sorted[(step_sorted >= last - 0.03) & (step_sorted <= last + 0.25)]
+        if len(window) < 3:
+            return None
+        if float(window[-1] - window[0]) <= 0.05:
+            return float(np.median(window))
+        gap = float(window[0] - last)
+        if 0.0 <= gap <= 0.15:
+            return 0.5 * (last + float(window[0]))
+        return None
+    first = float(on_sorted[0])
+    window = step_sorted[(step_sorted <= first + 0.03) & (step_sorted >= first - 0.25)]
+    if len(window) < 3:
+        return None
+    if float(window[-1] - window[0]) <= 0.05:
+        return float(np.median(window))
+    gap = float(first - window[-1])
+    if 0.0 <= gap <= 0.15:
+        return 0.5 * (float(window[-1]) + first)
+    return None
+
+
+def _unobserved_step(on_sorted: np.ndarray, side: str) -> tuple[float, float] | None:
+    """Center of the one-sample interval where the wall return stops.
+
+    Nothing was scanned on the far side of the opening, so the jamb is not a
+    measured point. It lies between the last on-plane column and the next
+    column that did not return. The center of that interval is the estimate.
+    The half-interval is the uncertainty. It is not a door width.
+    """
+    centers = _station_centers(on_sorted)
+    if len(centers) < 3:
+        return None
+    pitch = _local_pitch(centers)
+    if side == "high":
+        edge = _outer_inlier(centers, "high", pitch) + 0.5 * pitch
+    else:
+        edge = _outer_inlier(centers, "low", pitch) - 0.5 * pitch
+    return float(edge), float(pitch)
+
+
+def _continuous_jambs(
+    along: np.ndarray,
+    heights: np.ndarray,
+    coarse_left: float,
+    coarse_right: float,
+    step_along: np.ndarray | None = None,
+    step_depth: np.ndarray | None = None,
+):
+    """Place both jambs from the depth step, or from the unobserved interval.
+
+    The 5 cm histogram only decides that a gap exists. A scanned jamb is the
+    along-track position where the wall plane gives way to a second surface.
     """
     door = (heights > 0.35) & (heights < 1.65)
     samples = along[door] if int(door.sum()) >= 6 else along
     mid = 0.5 * (coarse_left + coarse_right)
-    # A longer flank gives a stabler column spacing. The jamb is still the
-    # center nearest the gap, not an average of the whole wall.
     left = np.sort(samples[(samples < mid) & (samples > coarse_left - 0.80)])
     right = np.sort(samples[(samples > mid) & (samples < coarse_right + 0.80)])
     if len(left) < 3 or len(right) < 3:
         return float(coarse_left), float(coarse_right), 0.025
-    left_centers = _station_centers(left)
-    right_centers = _station_centers(right)
-    if len(left_centers) < 3 or len(right_centers) < 3:
-        return float(coarse_left), float(coarse_right), 0.025
-    pitch_l = _local_pitch(left_centers)
-    pitch_r = _local_pitch(right_centers)
-    left_edge = _outer_inlier(left_centers, "high", pitch_l) + 0.5 * pitch_l
-    right_edge = _outer_inlier(right_centers, "low", pitch_r) - 0.5 * pitch_r
-    # Stay next to the bin that found the gap. A jump larger than this means
-    # the points and the histogram disagree, and the bin edge is safer.
-    if left_edge < coarse_left - 0.15 or left_edge > coarse_left + 0.15:
+
+    left_edge = None
+    right_edge = None
+    left_from_step = False
+    right_from_step = False
+    if step_along is not None and len(step_along) >= 3:
+        stepped = np.asarray(step_along, dtype=float)
+        if step_depth is not None and len(step_depth) == len(stepped):
+            deep = np.abs(np.asarray(step_depth, dtype=float)) >= 0.07
+            stepped = stepped[deep]
+        left_step = np.sort(stepped[(stepped < mid + 0.05) & (stepped > coarse_left - 0.20)])
+        right_step = np.sort(stepped[(stepped > mid - 0.05) & (stepped < coarse_right + 0.20)])
+        left_edge = _reveal_along(left, left_step, "high")
+        right_edge = _reveal_along(right, right_step, "low")
+        left_from_step = left_edge is not None
+        right_from_step = right_edge is not None
+
+    left_pitch = right_pitch = None
+    if left_edge is None or right_edge is None:
+        left_open = _unobserved_step(left, "high")
+        right_open = _unobserved_step(right, "low")
+        if left_open is None or right_open is None:
+            return float(coarse_left), float(coarse_right), 0.025
+        if left_edge is None:
+            left_edge, left_pitch = left_open
+        if right_edge is None:
+            right_edge, right_pitch = right_open
+
+    # An unobserved interval that disagrees with the histogram bin is rejected.
+    # A measured depth step is kept: the bin is only the detector.
+    if not left_from_step and (left_edge < coarse_left - 0.15 or left_edge > coarse_left + 0.15):
         left_edge = float(coarse_left)
-    if right_edge > coarse_right + 0.15 or right_edge < coarse_right - 0.15:
+    if not right_from_step and (right_edge > coarse_right + 0.15 or right_edge < coarse_right - 0.15):
         right_edge = float(coarse_right)
     if right_edge - left_edge < 0.2:
         return float(coarse_left), float(coarse_right), 0.025
-    sigma = 0.5 * max(pitch_l, pitch_r)
+    if left_from_step and right_from_step:
+        sigma = 0.01
+    else:
+        sigma = 0.5 * max(left_pitch or 0.02, right_pitch or 0.02)
     return float(left_edge), float(right_edge), float(sigma)
 
 
@@ -638,7 +720,14 @@ def _openings_on_line(line: dict, a0: float, a1: float, wall_len: float, abs_flo
         flank = _height_profile(heights, along, a, b)
         if flank["mid"] > 20 and prof["mid"] > 0.25 * flank["mid"]:
             continue
-        edge_l, edge_r, edge_sigma = _continuous_jambs(along, heights, gap0, gap1)
+        edge_l, edge_r, edge_sigma = _continuous_jambs(
+            along,
+            heights,
+            gap0,
+            gap1,
+            step_along=line.get("step_along"),
+            step_depth=line.get("step_depth"),
+        )
         width = edge_r - edge_l
         if width < 0.68 or width > 1.20:
             continue

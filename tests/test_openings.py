@@ -89,6 +89,57 @@ def test_repeated_returns_on_each_column_do_not_ignore_the_pitch():
     assert opening.width == pytest.approx(0.80, abs=pitch)
 
 
+def _opening_with_reveal(gap0, gap1, pitch=0.06, repeats=8):
+    """Coarse wall grid plus a jamb face 12 cm off the wall plane."""
+    stations = np.arange(0.0, 4.0 + pitch * 0.5, pitch)
+    stations = stations[(stations < gap0) | (stations >= gap1)]
+    along = np.repeat(stations, repeats)
+    height = np.full(along.shape, 1.0)
+    reveal = np.concatenate([np.full(repeats, gap0), np.full(repeats, gap1)])
+    runs = _support_runs(along)
+    line = {
+        "runs": runs,
+        "along": along,
+        "height": height,
+        "sigma": 0.01,
+        "n": int(len(along)),
+        "step_along": reveal,
+        "step_depth": np.full(reveal.shape, 0.12),
+    }
+    found = [op for op in _openings_on_line(line, 0.0, 4.0, 4.0, 0.012) if op.kind == "door"]
+    assert len(found) == 1, [(op.kind, round(op.width, 3)) for op in _openings_on_line(line, 0.0, 4.0, 4.0, 0.012)]
+    return found[0]
+
+
+def test_depth_step_places_the_jamb_on_a_coarse_grid():
+    # A 6 cm column midpoint is several centimetres off this phase.
+    # The reveal is the second surface, so the width is not half a column.
+    opening = _opening_with_reveal(1.20, 2.00, pitch=0.06)
+    assert opening.width == pytest.approx(0.80, abs=0.02)
+
+
+@pytest.mark.parametrize("width", [0.73, 1.05])
+def test_depth_step_is_not_a_fixed_door_width(width):
+    opening = _opening_with_reveal(1.20, 1.20 + width, pitch=0.06)
+    assert opening.width == pytest.approx(width, abs=0.02)
+
+
+def test_one_off_plane_speck_does_not_move_the_jamb():
+    along, height = _wall(1.20, 2.00, pitch=0.01)
+    runs = _support_runs(along)
+    line = {
+        "runs": runs,
+        "along": along,
+        "height": height,
+        "sigma": 0.01,
+        "n": int(len(along)),
+        "step_along": np.array([1.40]),
+        "step_depth": np.array([0.20]),
+    }
+    opening = [op for op in _openings_on_line(line, 0.0, 4.0, 4.0, 0.012) if op.kind == "door"][0]
+    assert opening.width == pytest.approx(0.80, abs=0.02)
+
+
 def test_both_flanks_are_required_for_the_80cm_door():
     opening = [op for op in _openings(*_wall(1.20, 2.00)) if op.kind == "door"][0]
     assert opening.along0 > 0.35

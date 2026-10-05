@@ -11,7 +11,7 @@ No laser, no tape, no second phone. The gates that need a tape are marked blocke
 | Ceiling | 2.50 m | 2.498 m |
 | Door | 0.80 m | 0.863 m |
 
-The door is 6.3 cm wide of the truth. Width is measured from column centers, not from a 5 cm bin edge. The sheet still steps by about 6 cm, so the ≤2 cm opening gate is not met. Real scans below report an opening only when both jambs are present, and none were, so there is no real opening to score.
+The door is 6.3 cm wide of the truth. That sheet is an empty hole: no second surface was scanned at the jamb, so the width is the center of the unobserved sample interval, and a 6 cm column can miss by about that much. Where a jamb face is scanned, the width is the along-track position of that depth step. The ≤2 cm opening gate is not met on the 62-case along-track set (34/62). Real scans below report an opening only when both jambs are present, and none were, so there is no real opening to score.
 
 ## LiDAR, `c00a170fe1` (no ceiling in the cloud)
 
