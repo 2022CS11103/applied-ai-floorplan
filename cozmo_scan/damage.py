@@ -249,6 +249,7 @@ def concealed_flags(rooms: list[dict]) -> list[dict]:
                     "trigger": "stain or moisture, height_band start <= 0.30 m, extent >= 0.04 m^2",
                     "confidence": 1.0 if base_hit else 0.0,
                     "fired": bool(base_hit),
+                    "flag": bool(base_hit),
                     "evidence": base_evidence,
                     "reference": base_evidence,
                 }
@@ -271,11 +272,27 @@ def concealed_flags(rooms: list[dict]) -> list[dict]:
                     "trigger": "window on the wall and stain or moisture reaching 0.70 m",
                     "confidence": 1.0 if sill_hit else 0.0,
                     "fired": bool(sill_hit),
+                    "flag": bool(sill_hit),
                     "evidence": sill_evidence,
                     "reference": sill_evidence,
                 }
             )
     return flags
+
+
+def concealed_summary(flags: list[dict]) -> dict:
+    """One statement for the report. An unfired rule is not a positive flag."""
+    fired = [flag for flag in flags if flag.get("flag") or flag.get("fired")]
+    if not fired:
+        return {"flag": False, "rule": None}
+    first = fired[0]
+    return {
+        "flag": True,
+        "rule": first.get("rule"),
+        "surface_id": first.get("surface_id"),
+        "evidence": first.get("evidence"),
+        "confidence": first.get("confidence"),
+    }
 
 
 def scope_items(rooms: list[dict]) -> list[dict]:
@@ -292,6 +309,7 @@ def scope_items(rooms: list[dict]) -> list[dict]:
             items.append(
                 {
                     "id": f"scope_{d['id']}",
+                    "scope_id": f"scope_{d['id']}",
                     "room": room.get("id") or room.get("room_id"),
                     "surface": d["surface_id"],
                     "surface_id": d["surface_id"],
@@ -300,6 +318,7 @@ def scope_items(rooms: list[dict]) -> list[dict]:
                     "category": code,
                     "class": d["class"],
                     "quantity": extent.get("value"),
+                    "metric_extent_m2": extent.get("value"),
                     "unit": unit,
                     "evidence": d.get("id"),
                     "confidence": extent.get("confidence"),

@@ -33,7 +33,7 @@ The assessment is not fully benchmarked. The gates that need a tape, a second ph
 ## What fails
 
 - Video on both company captures: `no_room_closure`.
-- Opening width on the synthetic door: 6.3 cm, and 54.8% of synthetic openings within 2 cm. ARKitScenes does not publish door widths, and neither plan emitted an opening.
+- Opening width on the synthetic door: 6.3 cm, and 39 of 62 synthetic openings (62.9%) within 2 cm on one fused grid. ARKitScenes does not publish door widths, and neither plan emitted an opening.
 - Ceiling against the FARO height peak: 5.4 cm on `42444949` and 4.5 cm on `42444946`. The 1.5 cm bar is missed. The peak is a histogram of laser depth, not a tape, so the assessment gate stays blocked.
 - Repeatability of the two walks: the long wall moves 9.7 cm (2.4%). That misses 1 cm and 0.5%. The short wall moves 1.5 cm (0.41%), which is inside 0.5% and outside 1 cm.
 - On `42444946` the FARO cloud did not close a room, so there is no laser-side wall length for that walk.

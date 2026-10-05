@@ -61,7 +61,48 @@ assessment/
     repeats/
 ```
 
-`benchmarks/manifests/assessment.example.json` is that shape with nothing filled in. Running it is BLOCKED, not a pass. Output lands in `runs/assessment/<property_id>/` as `validation.json`, one directory per tier, `benchmark.json`, `compliance.json`, `environment.json`, and `final_report.md`.
+`benchmarks/manifests/assessment.example.json` is that shape with nothing filled in. Running it is BLOCKED, not a pass. Output lands in `runs/assessment/<property_id>/` as `validation.json`, one directory per tier, `benchmark.json`, `compliance.json`, `incumbent.json`, `repeatability.json`, `damage.json`, `fix_loop.json`, `environment.json`, and `final_report.md`. The ground-truth check is under `benchmark/`.
+
+A property bundle uses the same command once the files exist:
+
+```text
+benchmarks/properties/<property_id>/
+    manifest.json
+    lidar/room_01/  video/room_01/  photo/room_01/
+    ground_truth/measurements.json
+    incumbent/polycam_or_magicplan_export.json
+    repeat/capture_a/  repeat/capture_b/
+```
+
+`benchmarks/properties/not_yet_captured/` is that layout with no measurements in it.
+
+```bash
+python run.py benchmark-bundle --manifest benchmarks/properties/not_yet_captured/manifest.json
+```
+
+Missing evidence prints JSON with `"status": "BLOCKED"` and exits 0. A malformed manifest exits 2. A real measurement that misses a bar exits 1. DEGRADED exits 0 and is not turned into PASS.
+
+A missing capture folder does not print a traceback:
+
+```bash
+python run.py run --capture path/that/is/not/there --tier lidar --out runs/missing
+```
+
+`python run.py repeat` compares even and odd frames of one walk. That file is `proxy_experiment: true`. Official repeatability is two captures, compared by `cozmo_scan/repeatability.py`. The fix-loop runner is:
+
+```bash
+python run.py fix-loop before --capture <folder> --out runs/fix_loop
+python run.py fix-loop after --capture <folder> --out runs/fix_loop
+python run.py fix-loop compare --before runs/fix_loop/before --after runs/fix_loop/after
+```
+
+The scorers themselves are checked on known numbers, separately from that blocked run:
+
+```bash
+python -m pytest tests/test_gate_local.py
+```
+
+That file passes a width inside 2 cm, fails one outside it, and does the same for the ceiling, repeatability, photo, video, damage, and incumbent thresholds. It also rejects a second property in the same manifest. A PASS in that file is the scorer. It is not a tape measurement. The split is in `docs/compliance_matrix.md`.
 
 A gate is PASS only when a tape, laser, or survey measurement exists and meets the bar. FAIL means the measurement exists and misses the bar. BLOCKED means the physical file is missing, the source is FARO or another external reference, or the photo scale is still the 1.40 m prior. DEGRADED means that tier ran and did not close a room; the command does not invent the missing lengths. The synthetic 62-opening schedule and the synthetic photo property stay in the tests. They are not this command's result.
 
@@ -75,6 +116,23 @@ python -m datasets.arkitscenes_reference
 ```
 
 The repeat command on one company walk is an even/odd proxy. It is not the two-walk repeatability gate. ARKitScenes is a FARO reference, not a tape.
+
+## What the evaluator supplies
+
+Put one property on disk and point `benchmarks/manifests/assessment.example.json` at it. The command does not need a code change.
+
+- `property/lidar/` with `depth/*.png`, `confidence/*.png`, `odometry.csv`, and `camera_matrix.csv`. An `rgb.mp4` is used when it is there.
+- `property/video/` with the walkthrough mp4. Odometry timestamps, when present, have to increase with the frame.
+- `property/photos/room_01/` and the other rooms, 2 to 8 stills each, all of this property.
+- `ground_truth/measurements.json` with `property_id`, `room_id`, `measurement_type`, `value_m`, `unit`, `uncertainty_m`, `source`, and `capture_id`. `source` is `tape`, `laser`, or `survey` for a physical gate. `faro` and `external_reference` stay labelled and cannot pass one.
+- `incumbent/polycam.json` or a Magicplan export for the same rooms. A normalized `dimensions` list is accepted. A `rooms[].walls[].length_m` export is accepted. A length in pixels is ignored.
+- `repeats/` for the second walk of the same room and tier.
+
+A missing file is BLOCKED and the process exits 0. A measurement that misses its bar exits 1. A mixed property, a malformed manifest, or a ground-truth file that is present but incomplete exits 2. A tier that runs and does not close a room is DEGRADED and exits 0.
+
+## Limitations
+
+This machine cannot capture a new walk, and the repo does not contain tape, a second physical walk of the company sample, iPhone stills, staged damage, or a Polycam or Magicplan export. Those gates stay blocked. The video tier triangulates the mp4 and the poses, drops blank frames and points that sit outside the dense cloud, and still returns `no_room_closure` when the walls do not close. It does not fill in a room. The 1.40 m photo prior is estimated scale. FARO comparisons in `benchmarks/external/` are a depth reference. The opening numbers in the tests that use shifted synthetic frames are a capture schedule, not the shipped LiDAR command. Shipped LiDAR still fuses the walk, then measures openings on that cloud.
 
 ## Output
 

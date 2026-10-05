@@ -104,6 +104,7 @@ def assess_scene(scene: dict, tier: str = "lidar") -> dict:
         room["damage"] = by_room.get(room["id"], [])
     return {
         "label": FIXTURE_LABEL,
+        "source": "synthetic_test_fixture",
         "tier": tier,
         "rooms": rooms,
         "scope_line_items": scope_items(rooms),

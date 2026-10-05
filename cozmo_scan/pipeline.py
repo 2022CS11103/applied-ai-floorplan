@@ -284,6 +284,7 @@ def repeatability(capture_path: Path, out_dir: Path, endpoint_mode: str) -> dict
         "fraction": None if n == 0 else round(n_pass / n, 3),
         "worst_abs_delta_m": None if n == 0 else max(r["abs_delta_m"] for r in rows),
         "proxy": "even/odd frames of one walk, not two physical captures",
+        "proxy_experiment": True,
         "rows": rows,
         "notes_even": layouts["even"].notes,
         "notes_odd": layouts["odd"].notes,
@@ -482,21 +483,78 @@ def main(argv: list[str] | None = None) -> None:
     assess.add_argument("--manifest", required=True, type=Path)
     assess.add_argument("--out", type=Path, default=None)
 
+    bundle = sub.add_parser("benchmark-bundle", help="validate a property bundle; missing evidence stays BLOCKED")
+    bundle.add_argument("--manifest", required=True, type=Path)
+
+    fix = sub.add_parser("fix-loop", help="before, after, and compare for one investigated gate")
+    fix_sub = fix.add_subparsers(dest="fix_cmd", required=True)
+    fix_before = fix_sub.add_parser("before")
+    fix_before.add_argument("--capture", required=True, type=Path)
+    fix_before.add_argument("--out", required=True, type=Path)
+    fix_before.add_argument("--tier", default="lidar", choices=["lidar", "video", "photo"])
+    fix_after = fix_sub.add_parser("after")
+    fix_after.add_argument("--capture", required=True, type=Path)
+    fix_after.add_argument("--out", required=True, type=Path)
+    fix_after.add_argument("--tier", default="lidar", choices=["lidar", "video", "photo"])
+    fix_compare = fix_sub.add_parser("compare")
+    fix_compare.add_argument("--before", required=True, type=Path)
+    fix_compare.add_argument("--after", required=True, type=Path)
+    fix_compare.add_argument("--out", type=Path, default=None)
+
     args = parser.parse_args(argv)
     if args.cmd == "self-check":
         result = self_check()
         print(json.dumps(result, indent=2))
         return
     if args.cmd == "run":
-        doc = run_one(
-            args.capture,
-            args.tier,
-            args.out,
-            endpoint_mode=args.endpoints,
-            floor_anchor=not args.no_floor_anchor,
-            loop=not args.no_loop,
-        )
-        print(f"wrote {args.out / 'plan.json'} status={doc['status']} rooms={len(doc['property']['rooms'])}")
+        try:
+            doc = run_one(
+                args.capture,
+                args.tier,
+                args.out,
+                endpoint_mode=args.endpoints,
+                floor_anchor=not args.no_floor_anchor,
+                loop=not args.no_loop,
+            )
+        except FileNotFoundError as exc:
+            print(json.dumps({"status": "BLOCKED", "reason": "missing_required_input", "missing": [str(exc)]}))
+            raise SystemExit(0)
+        except (ValueError, RuntimeError, OSError) as exc:
+            print(json.dumps({"status": "BLOCKED", "reason": "invalid_capture", "missing": [str(exc)]}))
+            raise SystemExit(2)
+        status = doc.get("status")
+        if status == "degraded":
+            print(f"wrote {args.out / 'plan.json'} status=DEGRADED rooms={len(doc['property']['rooms'])}")
+        else:
+            print(f"wrote {args.out / 'plan.json'} status={status} rooms={len(doc['property']['rooms'])}")
+        return
+    if args.cmd == "benchmark-bundle":
+        from .benchmark import bundle_status
+
+        result = bundle_status(args.manifest)
+        print(json.dumps(result, indent=2))
+        raise SystemExit(int(result.get("exit_code") or 0))
+    if args.cmd == "fix-loop":
+        from .fix_loop import after as fix_after_run
+        from .fix_loop import before as fix_before_run
+        from .fix_loop import compare as fix_compare_run
+
+        try:
+            if args.fix_cmd == "before":
+                fix_before_run(args.capture, args.out, tier=args.tier)
+            elif args.fix_cmd == "after":
+                fix_after_run(args.capture, args.out, tier=args.tier)
+            else:
+                diff = fix_compare_run(args.before, args.after, args.out)
+                print(json.dumps(diff, indent=2))
+                return
+        except FileNotFoundError as exc:
+            print(json.dumps({"status": "BLOCKED", "reason": "missing_required_input", "missing": [str(exc)]}))
+            raise SystemExit(0)
+        except (ValueError, RuntimeError, OSError) as exc:
+            print(json.dumps({"status": "BLOCKED", "reason": "invalid_capture", "missing": [str(exc)]}))
+            raise SystemExit(2)
+        print(f"wrote {args.out}")
         return
     if args.cmd == "assessment":
         from .assessment_run import run_assessment

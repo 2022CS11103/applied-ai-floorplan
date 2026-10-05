@@ -49,6 +49,6 @@ The FARO wall lengths are `DERIVED_FROM_DATASET`: the same `build_layout` ran on
 
 ## Opening numbers already measured
 
-Synthetic self-check door: predicted 0.863 m, fixture 0.800 m, absolute error 0.063 m. Gate is 0.020 m. Benchmark on the synthetic walls: 34 of 62 openings within 2 cm (54.8%). Company scans contain no surveyed openings, so real opening error is unavailable.
+Synthetic self-check door: predicted 0.863 m, fixture 0.800 m, absolute error 0.063 m. Gate is 0.020 m. One fused grid of the synthetic walls is 39 of 62 openings within 2 cm (62.9%). The older 34/62 figure is the count before the sparse path. Company scans contain no surveyed openings, so real opening error is unavailable.
 
 The 6 cm residual matches the station spacing of the wall columns (about 5–6 cm) plus the 2.5 cm fusion voxel. Tightening the histogram bin to force 0.800 m would pass the fixture and lie on a real jamb that is not exactly on a column. No threshold was changed in this audit.

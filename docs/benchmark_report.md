@@ -2,6 +2,10 @@
 
 No laser, no tape, no second phone. The gates that need a tape are marked blocked. They are not marked passed. The numbers below are what this machine could regenerate from the supplied bundles and from the synthetic box.
 
+The loader that will accept the evaluator's bundle is `cozmo_scan/benchmark.py`. The empty layout is `benchmarks/properties/not_yet_captured/`. Running `python run.py benchmark-bundle --manifest benchmarks/properties/not_yet_captured/manifest.json` returns BLOCKED and exit code 0. It does not contain invented tape, laser, or incumbent numbers. FARO and the public datasets stay references. A prediction that matches FARO is still BLOCKED on a tape gate.
+
+`python run.py assessment --manifest benchmarks/manifests/assessment.example.json` writes `runs/assessment/<property_id>/` including `benchmark/ground_truth_validation.json`, `incumbent.json`, `repeatability.json`, `fix_loop.json`, and `final_report.md`. Every gate on that example is BLOCKED.
+
 ## Synthetic box (`python run.py self-check`)
 
 | Quantity | Truth | Pipeline |
@@ -70,7 +74,7 @@ See `docs/fix_loop.md`. After the fix, matched walls on an even/odd split agree 
 
 ## Video tier on `c00a170fe1`
 
-The command does not read depth. Triangulation with the logged poses keeps 26,381 points and 9,688 after a 3 cm voxel. The cloud is streaks on close-up surfaces (tiles, appliances, floor), not a pair of wall lines, so the plan status is `degraded` with reason `no_room_closure` and zero rooms. No dimensions were invented. A video interval, when a room does close, is not allowed under ±3%.
+The command does not read depth. Triangulation with the logged poses keeps 26,381 points and 9,688 after a 3 cm voxel. A fence around the dense part of the cloud then drops 170 distant returns, leaving 9,518. The cloud is streaks on close-up surfaces (tiles, appliances, floor), not a pair of wall lines, so the plan status is `degraded` with reason `no_room_closure` and zero rooms. No dimensions were invented. A video interval, when a room does close, is not allowed under ±3%.
 
 ## Photo tier
 

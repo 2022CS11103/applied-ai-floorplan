@@ -1,5 +1,6 @@
 {
   "label": "synthetic/test fixture — not physical benchmark ground truth",
+  "source": "synthetic_test_fixture",
   "note": "These extents are the painted rectangles in input/scene.json. They are not the detector output and they are not a tape.",
   "unit_extent": "m2",
   "regions": [

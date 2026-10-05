@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from datetime import datetime, timezone
 import platform
 import sys
@@ -28,7 +29,7 @@ from .photo import validate_photo_capture
 def _as_block(value, property_id: str | None) -> dict:
     if isinstance(value, dict):
         return {
-            "path": value.get("path"),
+            "path": value.get("path") or value.get("capture_b"),
             "property_id": value.get("property_id") or property_id,
             "tier": value.get("tier"),
         }
@@ -43,13 +44,14 @@ def normalize_manifest(doc: dict) -> dict:
         raise ValueError("manifest must be a JSON object")
     property_id = doc.get("property_id")
     rooms = doc.get("rooms") or doc.get("room_ids") or []
+    tiers = doc.get("tiers") if isinstance(doc.get("tiers"), dict) else {}
     return {
         "property_id": property_id,
         "rooms": list(rooms),
         "connector": doc.get("connector"),
-        "lidar": _as_block(doc.get("lidar") or doc.get("lidar_capture"), property_id),
-        "video": _as_block(doc.get("video") or doc.get("video_capture"), property_id),
-        "photos": _as_block(doc.get("photos") or doc.get("photo_folder"), property_id),
+        "lidar": _as_block(doc.get("lidar") or doc.get("lidar_capture") or tiers.get("lidar"), property_id),
+        "video": _as_block(doc.get("video") or doc.get("video_capture") or tiers.get("video"), property_id),
+        "photos": _as_block(doc.get("photos") or doc.get("photo_folder") or tiers.get("photo") or tiers.get("photos"), property_id),
         "repeat": _as_block(doc.get("repeat") or doc.get("repeat_capture"), property_id),
         "ground_truth": _as_block(doc.get("ground_truth"), property_id),
         "damage": _as_block(doc.get("damage") or doc.get("damage_ground_truth"), property_id),
@@ -124,11 +126,23 @@ def validate_lidar_dir(path: Path | None) -> list[str]:
         return [f"lidar capture is not a directory: {path.name}"]
     errors = []
     depth = path / "depth"
-    if not depth.is_dir() or not any(depth.glob("*.png")):
+    depth_frames = sorted(depth.glob("*.png")) if depth.is_dir() else []
+    if not depth_frames:
         errors.append("lidar capture needs depth/*.png")
     confidence = path / "confidence"
-    if not confidence.is_dir() or not any(confidence.glob("*.png")):
+    confidence_frames = sorted(confidence.glob("*.png")) if confidence.is_dir() else []
+    if not confidence_frames:
         errors.append("lidar capture needs confidence/*.png")
+    if depth_frames and confidence_frames and len(depth_frames) != len(confidence_frames):
+        errors.append(f"depth has {len(depth_frames)} frames and confidence has {len(confidence_frames)}")
+    if depth_frames:
+        import cv2
+
+        sample = cv2.imread(str(depth_frames[0]), cv2.IMREAD_UNCHANGED)
+        if sample is None:
+            errors.append("depth frame is not a readable image")
+        elif getattr(sample, "ndim", 0) != 2:
+            errors.append("depth frame must be a single-channel range image")
     if not (path / "odometry.csv").is_file():
         errors.append("lidar capture needs odometry.csv")
     if not (path / "camera_matrix.csv").is_file():
@@ -318,6 +332,7 @@ def _tier_status(plan: dict | None, validation_errors: list[str]) -> str:
 
 
 def run_assessment(manifest_path: Path, out_dir: Path | None = None, command: str | None = None) -> dict:
+    started = time.perf_counter()
     manifest_path = Path(manifest_path)
     raw = load_json(manifest_path)
     manifest = normalize_manifest(raw)
@@ -377,6 +392,12 @@ def run_assessment(manifest_path: Path, out_dir: Path | None = None, command: st
             (destination / name).write_text(json.dumps({"rejected": True, "reason": report["reason"]}, indent=2), encoding="utf-8")
         report["output_dir"] = str(destination)
         report["exit_code"] = 2
+        from .benchmark import write_assessment_artifacts
+
+        reported = dict(manifest)
+        if gt_path is not None:
+            reported["ground_truth"] = {**manifest["ground_truth"], "path": str(gt_path)}
+        write_assessment_artifacts(destination, report, reported, time.perf_counter() - started)
         return report
 
     plans = {}
@@ -484,6 +505,9 @@ def run_assessment(manifest_path: Path, out_dir: Path | None = None, command: st
         validation["ground_truth_schema"] = [message for _, message in measurement_contract_issues(load_json(gt_path))]
         (destination / "validation.json").write_text(json.dumps(validation, indent=2), encoding="utf-8")
     scored["failed"] = any(gate.get("status") == "FAIL" for gate in scored["gates"].values())
+    structural = [message for message in validation.get("ground_truth_schema") or [] if "reference" not in message]
+    if structural:
+        scored["contract_errors"] = structural
     scored = _portable(scored, Path.cwd())
     scored["tier_status"] = {tier: measurements[tier]["status"] for tier in ("lidar", "video", "photo")}
     write_assessment(scored, destination)
@@ -498,5 +522,14 @@ def run_assessment(manifest_path: Path, out_dir: Path | None = None, command: st
     (destination / "compliance.md").write_text(render_markdown(scored), encoding="utf-8")
     (destination / "final_report.md").write_text(render_markdown(scored), encoding="utf-8")
     scored["output_dir"] = str(destination)
-    scored["exit_code"] = 1 if scored.get("failed") else 0
+    if structural:
+        scored["exit_code"] = 2
+    else:
+        scored["exit_code"] = 1 if scored.get("failed") else 0
+    from .benchmark import write_assessment_artifacts
+
+    reported = dict(manifest)
+    if gt_path is not None:
+        reported["ground_truth"] = {**manifest["ground_truth"], "path": str(gt_path)}
+    write_assessment_artifacts(destination, scored, reported, time.perf_counter() - started)
     return scored

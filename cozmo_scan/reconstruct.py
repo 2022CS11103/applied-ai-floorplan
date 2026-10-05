@@ -107,6 +107,26 @@ def _frame_number(pose) -> int | None:
         return None
 
 
+def reject_distant_points(xyz: np.ndarray, extras: list[np.ndarray] | None = None):
+    """Drop returns that sit well outside the dense part of the cloud.
+
+    The fence is the 5th to 95th percentile, expanded by one metre. A point
+    tens of metres away is not a wall of this room. Points inside that fence
+    stay, including a real wall at the edge of the walk.
+    """
+    extras = list(extras or [])
+    if len(xyz) < 30:
+        return xyz, extras, 0
+    low = np.percentile(xyz, 5, axis=0) - 1.0
+    high = np.percentile(xyz, 95, axis=0) + 1.0
+    keep = np.all((xyz >= low) & (xyz <= high), axis=1)
+    dropped = int((~keep).sum())
+    if dropped == 0:
+        return xyz, extras, 0
+    kept_extras = [item[keep] for item in extras]
+    return xyz[keep], kept_extras, dropped
+
+
 def fuse_video(capture: Capture, max_frames: int = 90) -> Cloud:
     """Triangulate the walk with the metric poses.
 
@@ -152,10 +172,11 @@ def fuse_video(capture: Capture, max_frames: int = 90) -> Cloud:
     orb = cv2.ORB_create(nfeatures=3000, fastThreshold=7)
     frames = []
     keypoint_counts = []
+    blank_frames = 0
     frame_no = 0
     while True:
         ok, bgr = cap.read()
-        if not ok or bgr is None:
+        if not ok or bgr is None or getattr(bgr, "size", 0) == 0:
             break
         idx = wanted.get(frame_no)
         frame_no += 1
@@ -163,6 +184,10 @@ def fuse_video(capture: Capture, max_frames: int = 90) -> Cloud:
             continue
         small = cv2.resize(bgr, None, fx=detect_scale, fy=detect_scale, interpolation=cv2.INTER_AREA)
         gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
+        if float(gray.std()) < 1.5:
+            blank_frames += 1
+            keypoint_counts.append(0)
+            continue
         kp, des = orb.detectAndCompute(gray, None)
         n_kp = 0 if kp is None else len(kp)
         keypoint_counts.append(n_kp)
@@ -214,10 +239,14 @@ def fuse_video(capture: Capture, max_frames: int = 90) -> Cloud:
         cols = np.asarray(colors, dtype=np.uint8)
         fidx = np.asarray(frame_ids, dtype=np.int32)
         xyz, [cols, fidx] = voxel_downsample(xyz, 0.03, [cols, fidx])
+        voxel_count = int(len(xyz))
+        xyz, [cols, fidx], outliers_removed = reject_distant_points(xyz, [cols, fidx])
     else:
         xyz = np.zeros((0, 3), dtype=np.float32)
         cols = np.zeros((0, 3), dtype=np.uint8)
         fidx = np.zeros((0,), dtype=np.int32)
+        voxel_count = 0
+        outliers_removed = 0
 
     median_kp = float(np.median(keypoint_counts)) if keypoint_counts else 0.0
     low_texture = bool(keypoint_counts) and (median_kp < 80 or np.mean(np.array(keypoint_counts) < 25) > 0.45)
@@ -243,7 +272,9 @@ def fuse_video(capture: Capture, max_frames: int = 90) -> Cloud:
         meta={
             "points": int(len(xyz)),
             "points_raw": int(raw_count),
-            "points_after_voxel": int(len(xyz)),
+            "points_after_voxel": int(voxel_count),
+            "outliers_removed": int(outliers_removed),
+            "blank_frames": int(blank_frames),
             "midband_points": int(midband),
             "input_frames": int(input_frames),
             "frames_decoded": int(frame_no),

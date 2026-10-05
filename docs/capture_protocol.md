@@ -40,7 +40,7 @@ LiDAR tier, iPhone 15 Pro or any later Pro:
 1. Same walk as above, built-in Camera, 30 fps is enough.
 2. Hold the phone in landscape or portrait, but do not switch mid-walk.
 3. One clip per property, not one clip per room.
-4. Hand over the mp4. If the phone also logged poses and IMU, put `odometry.csv` and `imu.csv` next to the file. Without poses the video tier runs structure-from-motion and scales it with the 1.40 m chest-height prior. The interval gets wider. That is expected.
+4. Hand over the mp4 and `odometry.csv` in the same folder. One row per frame, metres, quaternion xyzw, timestamps increasing. `imu.csv` is optional. Without `odometry.csv` the command still runs, and the plan is degraded with reason `missing_pose`. It does not borrow the 1.40 m photo prior and it does not invent wall lengths. A Camera-app video with no pose file is not a metric plan.
 
 `python run.py run --capture <folder-with-mp4> --tier video --out runs/walkin_video`
 
@@ -49,21 +49,7 @@ LiDAR tier, iPhone 15 Pro or any later Pro:
 1. Two to eight stills per room. One folder per room.
 2. Stand in a corner, chest height, phone upright, and photograph the opposite corner so two walls and some floor are in frame. Then the other corners. Overlap is required. A set of photos of one wall only will not make a plan.
 3. Take one extra photo standing in each doorway, looking into the next room.
-4. Write `adjacency.json` next to the room folders. This is the sketch. The photo tier cannot invent which room is north of which room from eight stills.
-
-```json
-{
-  "rooms": [
-    {"id": "kitchen", "folder": "kitchen"},
-    {"id": "hall", "folder": "hall"}
-  ],
-  "links": [
-    {"a": "kitchen", "b": "hall", "via": "door", "side": "north"}
-  ]
-}
-```
-
-`side` is the side of room `a` that room `b` sits on: north, south, east, or west, in the plan drawing, not a compass.
+4. Name each room folder after the room. The pipeline connects two rooms only when their floor polygons share an edge. A handwritten `adjacency.json` is noted and is not used to place rooms. If the stills never produce a shared edge, the plan says `adjacency_unresolved` and draws no link. The doorway photo is what can create that edge.
 
 `python run.py run --capture <property-folder> --tier photo --out runs/walkin_photo`
 

@@ -12,7 +12,7 @@ The quaternion is camera-to-world. The camera that fits this logger is OpenCV: X
 
 ## Floor, drift, ceiling
 
-A RANSAC plane is fit to the low points and rotated onto +Y. The walk is then split into four time chunks and each chunk's floor is shifted to zero. A slow vertical drift otherwise smears the wall band and the ceiling. The ablation is the same cloud with that rotation and those shifts turned off. On `c00a170fe1` the footprint goes from 10.96 m² to 14.00 m². On the ceiling scan it goes from 6.52 m² to 9.27 m².
+A RANSAC plane is fit to the low points and rotated onto +Y. The walk is then split into four time chunks and each chunk's floor is shifted to zero. A slow vertical drift otherwise smears the wall band and the ceiling. The ablation is the same cloud with that rotation and those shifts turned off. On `c00a170fe1` the anchor-off footprint is 10.96 m² and the anchor-on footprint is 14.00 m². On the ceiling scan the anchor-off footprint is 13.53 m² and the anchor-on footprint is 9.27 m².
 
 A loop was also estimated: wall points from the end of the walk against wall points from the start, yaw and translation only. It is applied only when the correction is small and the error actually drops. On both samples the correction was too big to be a loop, so it was not applied, and the JSON says why. That is the drift row. Poses are not taken as-is, and a failed loop is not hidden.
 

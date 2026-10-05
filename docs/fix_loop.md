@@ -1,7 +1,17 @@
 # Fix loop
 
 Capture: `single_room/c00a170fe1`, LiDAR tier.
-Proxy, not two physical walks: even frames against odd frames of the same walk. A second walk was not possible. The proxy is labelled in `repeatability.json`.
+Proxy, not two physical walks: even frames against odd frames of the same walk. A second walk was not possible. The proxy is labelled `proxy_experiment: true` in `repeatability.json`. It is not the official repeatability gate. That gate is `compare_two_captures` in `cozmo_scan/repeatability.py`, and it stays BLOCKED until capture B exists.
+
+Regenerate the write-up from two already written plans:
+
+```bash
+python run.py fix-loop before --capture <lidar-folder> --out runs/fix_loop
+python run.py fix-loop after --capture <lidar-folder> --out runs/fix_loop
+python run.py fix-loop compare --before runs/fix_loop/before --after runs/fix_loop/after
+```
+
+`compare` writes `diff.json` and `report.md` with the worst gate, the failing number, the hypothesis, the evidence, the intended fix, the predicted result, the actual after result, and an honest note when the prediction missed. One capture keeps `proxy_experiment: true`.
 
 ## 1. Worst gate
 
@@ -53,6 +63,20 @@ python run.py run --capture single_room/c00a170fe1 --tier lidar --endpoints inte
 ```
 
 The pass in the table above is the even/odd proxy on one company walk. It is not the PDF repeatability gate. Two ARKit walks of visit 421337 still differ by 9.7 cm on the long wall.
+
+## Physical repeatability, not closed
+
+Gate: two walks of the same room, absolute difference ≤ 1 cm or relative difference ≤ 0.5%.
+
+Failing number: ARKitScenes visit 421337, long wall 9.7 cm (2.4%) between the two Apple walks. Short wall 1.5 cm (0.41%). Ceiling spread 1.1 cm.
+
+Root cause: these are two real walks, not an even/odd split of one walk. The even/odd fix above does not move this pair onto the bar.
+
+Evidence: `benchmarks/external/arkitscenes_visit_421337/repeatability.json`.
+
+Shipped fix: none. No threshold was moved, and the wall length was not pulled toward the other walk.
+
+Before: 9.7 cm. After: 9.7 cm. Reproduction: `python -m datasets.arkitscenes_reference`.
 
 ## Opening width, not closed
 

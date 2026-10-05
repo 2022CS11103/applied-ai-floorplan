@@ -513,6 +513,67 @@ def score_damage(ground_truth: list[dict], predicted: list[dict], source: str | 
     )
 
 
+def _metres(wall: dict) -> float | None:
+    for key in ("length_m", "lengthInMeters", "length", "measure"):
+        if wall.get(key) is None:
+            continue
+        try:
+            return float(wall[key])
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def normalize_incumbent(doc: dict) -> list[dict]:
+    """Turn a Polycam or Magicplan export into one row per wall.
+
+    A file that already has ``dimensions`` is used as given. A room export
+    contributes a length only when that length is in the file. Missing ground
+    truth stays missing, so the comparison cannot invent a winner.
+    """
+    if not isinstance(doc, dict):
+        return []
+    if doc.get("dimensions"):
+        return [row for row in doc["dimensions"] if isinstance(row, dict)]
+    rooms = [room for room in (doc.get("rooms") or []) if isinstance(room, dict)]
+    for floor in doc.get("floors") or []:
+        if isinstance(floor, dict):
+            rooms.extend(room for room in (floor.get("rooms") or []) if isinstance(room, dict))
+    vendor = str(doc.get("vendor") or doc.get("export") or doc.get("source") or "incumbent")
+    rows = []
+    for room in rooms:
+        room_id = room.get("room_id") or room.get("id") or room.get("name")
+        for wall in room.get("walls") or []:
+            if not isinstance(wall, dict):
+                continue
+            length = _metres(wall)
+            if length is None:
+                continue
+            truth = wall.get("ground_truth_m")
+            ours = wall.get("ours_m")
+            row = {
+                "dimension": str(wall.get("wall_id") or wall.get("id") or room_id),
+                "room_id": room_id,
+                "wall_id": wall.get("wall_id") or wall.get("id"),
+                "incumbent_m": length,
+                "vendor": vendor,
+            }
+            if ours is not None:
+                row["ours_m"] = float(ours)
+            if truth is not None:
+                truth_m = float(truth)
+                row["ground_truth_m"] = truth_m
+                row["incumbent_error_m"] = abs(length - truth_m)
+                if truth_m:
+                    row["incumbent_relative_error"] = abs(length - truth_m) / abs(truth_m)
+                if ours is not None:
+                    row["ours_error_m"] = abs(float(ours) - truth_m)
+                    if truth_m:
+                        row["ours_relative_error"] = abs(float(ours) - truth_m) / abs(truth_m)
+            rows.append(row)
+    return rows
+
+
 def score_incumbent(rows: list[dict]) -> dict:
     """Dimension by dimension. No export means BLOCKED, not a 0% loss."""
     if not rows:
@@ -699,7 +760,7 @@ def run_manifest(manifest: dict, root: Path | None = None) -> dict:
         else:
             evidence["incumbent"] = str(incumbent_path)
             incumbent = load_json(incumbent_path)
-            gates["incumbent"] = score_incumbent(incumbent.get("dimensions") or [])
+            gates["incumbent"] = score_incumbent(normalize_incumbent(incumbent))
 
     for key in missing:
         evidence.setdefault("missing_manifest_fields", [])

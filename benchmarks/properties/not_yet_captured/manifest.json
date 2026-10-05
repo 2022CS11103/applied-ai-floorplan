@@ -1,0 +1,21 @@
+{
+  "property_id": "not_yet_captured",
+  "rooms": ["room_01", "room_02", "room_03"],
+  "connector": {"rooms": ["room_01", "room_02"], "relationship": "door"},
+  "capture_ids": [],
+  "tiers": {
+    "lidar": {"path": "lidar", "capture_id": null},
+    "video": {"path": "video", "capture_id": null},
+    "photo": {"path": "photo", "capture_id": null}
+  },
+  "repeat": {
+    "capture_a": "repeat/capture_a",
+    "capture_b": "repeat/capture_b",
+    "tier": "lidar",
+    "room_id": "room_01"
+  },
+  "ground_truth": {"source": null, "path": "ground_truth/measurements.json"},
+  "incumbent": {"app": null, "name": null, "version": null, "path": "incumbent/polycam_or_magicplan_export.json"},
+  "damage": {"room_id": null, "path": null},
+  "note": "Folder layout only. No tape, laser, incumbent, or staged-damage numbers are stored here."
+}
