@@ -32,7 +32,7 @@ A 95% half-width is 1.96 times the scatter of the points that define the wall, a
 
 ## Openings, damage, scope
 
-An opening is a gap in the walking band, 0.68 m to 1.20 m, with wall on both sides. A missing end of a scan is not a door. Head height is left empty when the header was not seen. On the synthetic box the door is recovered at 0.90 m against 0.80 m. The 5 cm bin is the reason, and it is not good enough for the 2 cm opening gate.
+An opening is a gap in the walking band, 0.68 m to 1.20 m, with wall on both sides. A missing end of a scan is not a door. Head height is left empty when the header was not seen. On the synthetic box the door is recovered at 0.863 m against 0.80 m. The residual is the unobserved column step, about 6 cm, and it is not good enough for the 2 cm opening gate.
 
 Damage is a local color residual on the wall, in 10 cm cells, against the neighbouring cells so a lighting gradient does not fire. A region has to be clearly darker, at least 0.12 m², and compact. Moisture is that, plus a yellow shift, at the base of the wall. Two concealed rules are always written down: stain or moisture in the bottom 30 cm, and stain under a window. On these samples nothing fired, and the scope list is empty. There was nothing staged to find.
 
@@ -46,7 +46,7 @@ Damage is a local color residual on the wall, in 10 cm cells, against the neighb
 | Unclosed loop | not applied | horizontal drift remains |
 | Opening bin | 5 cm | door width, the known miss |
 | Photo scale prior | 1.40 m assumed | ±8% floor, and only if a floor plane exists |
-| Video sparsity | 611 points here | no plan, rather than a bad plan |
+| Video sparsity | 9,688 points after voxel, room still open | no plan, rather than a bad plan |
 
 ## Failure modes
 

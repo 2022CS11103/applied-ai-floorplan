@@ -9,9 +9,9 @@ No laser, no tape, no second phone. The gates that need a tape are marked blocke
 | Floor | 4.00 m by 3.00 m | 3.999 m and 2.998 m |
 | Area | 12.00 m² | 11.991 m² |
 | Ceiling | 2.50 m | 2.498 m |
-| Door | 0.80 m | 0.90 m |
+| Door | 0.80 m | 0.863 m |
 
-The door is 10 cm wide of the truth. Occupancy along a wall is binned at 5 cm, and the gap is measured from bin edges. A 2 cm opening gate is not met by that bin. Real scans below report an opening only when both jambs are present, and none were, so there is no real opening to score.
+The door is 6.3 cm wide of the truth. Width is measured from column centers, not from a 5 cm bin edge. The sheet still steps by about 6 cm, so the ≤2 cm opening gate is not met. Real scans below report an opening only when both jambs are present, and none were, so there is no real opening to score.
 
 ## LiDAR, `c00a170fe1` (no ceiling in the cloud)
 
@@ -47,7 +47,7 @@ Floor-plane anchor on, against a single floor-height subtraction.
 | Capture | Area with anchor | Area without | Floor tilt removed |
 | --- | --- | --- | --- |
 | c00a170fe1 | 14.00 m² | 10.96 m² | 0.49° |
-| c7d28f72c6 | 9.27 m² | 6.52 m² | 0.03° |
+| c7d28f72c6 | 9.27 m² | 13.53 m² | 0.03° |
 
 The area moves because the wall band is defined in metres above the floor. A tilted or drifting floor pulls that band off the walls and the plan changes. Loop closure was estimated and not applied: the rigid correction was too large to be a return to the start, and the report says so. Poses were not used as-is.
 
@@ -57,11 +57,11 @@ See `docs/fix_loop.md`. After the fix, matched walls on an even/odd split agree 
 
 ## Video tier on `c00a170fe1`
 
-The command does not read depth. Triangulation with the logged poses kept **611** points. That is not enough to support a wall, and the plan status is `degraded` with zero rooms. No dimensions were invented to fill the page. A video interval, when a room does close, is not allowed under ±3%.
+The command does not read depth. Triangulation with the logged poses keeps 26,381 points and 9,688 after a 3 cm voxel. The cloud is streaks on close-up surfaces (tiles, appliances, floor), not a pair of wall lines, so the plan status is `degraded` with reason `no_room_closure` and zero rooms. No dimensions were invented. A video interval, when a room does close, is not allowed under ±3%.
 
 ## Photo tier
 
-Implemented: sequential SfM, scale from the 1.40 m chest-height prior, rooms placed by `adjacency.json`. Not closed on this sample. These files are a LiDAR walk, not the corner stills the protocol asks for. Running SfM on the wrong capture and publishing a plan would be a false photo result.
+Per-room folders stitch by shared edges, not by `adjacency.json`. The labelled fixture `fixtures/synthetic_photo_property` (3 rooms plus a connector, 15 stills) writes one plan: 4 closed rooms, 3 geometry links, overlap 0 m², footprint 33.331 m². That fixture is not a tape, and the company sample is a LiDAR walk, not 2–8 stills per room. Physical photo ±8% stays blocked.
 
 ## Head to head
 
@@ -71,9 +71,9 @@ Not run. Polycam, Magicplan, and the others need the same rooms on a phone, and 
 
 | Gate | Result |
 | --- | --- |
-| Opening width ≤ 2 cm on ≥ 85% | Blocked. No tape. Synthetic door is 10 cm off because of the 5 cm bin. Real scans: no opening emitted. |
-| Ceiling ≤ 1.5 cm, repeat spread ≤ 1 cm | Blocked. No tape. `c00a170fe1` correctly refuses a ceiling. `c7d28f72c6` reports 2.27 m and 2.47 m from plane peaks. |
-| Repeatability 1 cm or 0.5% | Pass on the matched walls of an even/odd split after the fix. Not a second physical walk. |
-| Drift, with an ablation | Floor anchor on vs off, numbers above. Loop checked, not forced. |
-| Photo stitch of a whole property | Not demonstrated on a real photo set. Sketch placement is implemented. |
-| Photo ±8%, video ±3%, with intervals | Interval floors are in the code. Video did not close, so it did not publish a tight number. |
+| Opening width ≤ 2 cm on ≥ 85% | Blocked. No tape. Synthetic door is 6.3 cm off (0.863 m vs 0.80 m). The opening benchmark is 34/62 ≤ 2 cm, which is under 85%. Real scans: no opening emitted. A miss or a phantom would count as a miss. |
+| Ceiling ≤ 1.5 cm, repeat spread ≤ 1 cm | Blocked. No tape and no second capture. `c00a170fe1` and the floor-only scan leave ceiling null. `c7d28f72c6` reports 2.271 m and 2.466 m from observed planes. |
+| Repeatability 1 cm or 0.5% | Blocked as an assessment gate. Even/odd frames of one walk are a proxy, not two captures. |
+| Drift, with an ablation | Floor anchor on vs off, numbers above. Loop checked and not applied. Poses are not used as-is on LiDAR. |
+| Photo stitch of a whole property | Synthetic fixture stitches with adjacency and no overlap. Physical ±8% footprint is blocked: no calibrated photo capture. |
+| Photo ±8%, video ±3%, with intervals | Interval floors are in the code. Video did not close, so it did not publish a wall length. Photo fixture metres are not a tape. |
