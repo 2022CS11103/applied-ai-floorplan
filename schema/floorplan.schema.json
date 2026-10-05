@@ -139,6 +139,8 @@
         "head_height_m": {
           "anyOf": [{"type": "null"}, {"$ref": "#/$defs/measurement"}]
         },
+        "method": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "measurements": {
           "type": "object",
           "required": ["width_m"],
@@ -217,8 +219,13 @@
       "required": ["id", "surface_id", "rule", "fired", "evidence"],
       "properties": {
         "rule": {"enum": ["base_stain_moisture_path", "sill_stain_under_window"]},
+        "rule_id": {"type": "string"},
+        "surface": {"type": "string"},
+        "trigger": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "fired": {"type": "boolean"},
-        "evidence": {"type": "string"}
+        "evidence": {"type": "string"},
+        "reference": {"type": "string"}
       }
     }
   }

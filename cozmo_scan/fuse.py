@@ -108,6 +108,7 @@ def fuse_lidar(
             "frame_stride": frame_stride,
             "pixel_stride": pixel_stride,
             "points": int(len(xyz)),
+            "opening_evidence": "voxel_fused",
         },
     )
 

@@ -46,6 +46,8 @@ class Opening:
     along1: float
     sill: float | None
     head: float | None
+    method: str = "wall_termination"
+    confidence: float = 0.80
 
 
 @dataclass
@@ -265,6 +267,9 @@ def _support_runs(along: np.ndarray, bin_m: float = 0.05, min_run: float = 0.45)
     hist, edges = np.histogram(along, bins=bins)
     # A handful of returns marks the surface. Holes shorter than a door are
     # closed so a sparse pass does not shatter one wall into clutter.
+    # Three or more returns in a 5 cm bin are strong wall evidence.
+    # One or two returns are not promoted here. They can only become a
+    # low-confidence opening through _consistent_sparse_runs.
     occupied = hist >= 3
     occ = occupied.copy()
     gap_bins = max(1, int(round(0.25 / bin_m)))
@@ -688,60 +693,295 @@ def _continuous_jambs(
     return float(left_edge), float(right_edge), float(sigma)
 
 
+def _consistent_sparse_runs(along: np.ndarray, bin_m: float = 0.05, min_run: float = 0.45) -> list[tuple[float, float, int]]:
+    """Wall runs from one or two hits per bin, when neighbors agree.
+
+    A lone return is not a wall. A bin with one hit counts only when the
+    next bin also has a return, so the surface continues. A bin with two
+    hits is a repeated return at that station. Empty bins are not filled:
+    the 0.25 m close used by the strong detector would invent wall across
+    a hole this path cannot see. Runs shorter than a real flank are dropped.
+    """
+    if len(along) < 8:
+        return []
+    lo, hi = float(np.min(along)), float(np.max(along))
+    if hi - lo < min_run:
+        return []
+    edges = np.arange(lo, hi + bin_m, bin_m)
+    hist, edges = np.histogram(along, bins=edges)
+    supported = np.zeros(len(hist), dtype=bool)
+    for i, count in enumerate(hist):
+        if count >= 2:
+            supported[i] = True
+        elif count == 1:
+            left = i > 0 and hist[i - 1] >= 1
+            right = i + 1 < len(hist) and hist[i + 1] >= 1
+            supported[i] = bool(left or right)
+    runs = []
+    i = 0
+    while i < len(supported):
+        if not supported[i]:
+            i += 1
+            continue
+        j = i
+        while j < len(supported) and supported[j]:
+            j += 1
+        a = float(edges[i])
+        b = float(edges[j])
+        if b - a >= min_run:
+            runs.append((a, b, int(hist[i:j].sum())))
+        i = j
+    return runs
+
+
+def _interval_center(centers: np.ndarray, halves: np.ndarray) -> tuple[float, str]:
+    """Center of the brackets that contain the median midpoint.
+
+    Each view says the jamb lies in [center - half, center + half]: the
+    unobserved sample interval, not a measured point. Views whose bracket
+    misses the median midpoint are a bad station, and they are left out.
+    The jamb is then the center of the overlap. If the overlap is empty,
+    the median of the midpoints remains.
+    """
+    median = float(np.median(centers))
+    keep = [
+        (float(center), float(half))
+        for center, half in zip(centers, halves)
+        if center - half - 1e-9 <= median <= center + half + 1e-9
+    ]
+    if len(keep) < 2:
+        return median, "median_midpoint"
+    lo = max(center - half for center, half in keep)
+    hi = min(center + half for center, half in keep)
+    if hi < lo - 1e-6:
+        return median, "median_midpoint"
+    return float(0.5 * (lo + hi)), "interval_intersection"
+
+
+def aggregate_jambs(candidates: list[tuple], methods: list[str] | None = None) -> dict | None:
+    """Aggregate per-frame jambs. The frames are not voxel-fused first.
+
+    Each candidate is one view's (left, right) edge in the same wall-local
+    coordinate, optionally with the half-width of each edge's unobserved
+    interval. A shifted camera puts a return in a gap the previous grid
+    missed. Bare edges, with no interval, use the median. Confidence is
+    how tightly the views agree, on the scale of one coarse column (6 cm).
+    It is not a probability that the width is true. Sparse views stay on
+    their own method and cannot reach the confidence of a dense jamb.
+    """
+    if not candidates:
+        return None
+    lefts = np.array([c[0] for c in candidates], dtype=float)
+    rights = np.array([c[1] for c in candidates], dtype=float)
+    halves_ready = all(len(c) >= 4 for c in candidates)
+    if halves_ready:
+        left, left_how = _interval_center(lefts, np.array([c[2] for c in candidates], dtype=float))
+        right, right_how = _interval_center(rights, np.array([c[3] for c in candidates], dtype=float))
+        localization = "interval_intersection" if left_how == right_how == "interval_intersection" else "median_midpoint"
+    else:
+        left = float(np.median(lefts))
+        right = float(np.median(rights))
+        localization = "median_midpoint"
+    if right - left <= 0:
+        return None
+    widths = rights - lefts
+    spread = float(np.median(np.abs(widths - np.median(widths))))
+    sparse = methods is not None and len(methods) == len(candidates) and all(
+        method == "sparse_wall_termination" for method in methods
+    )
+    if sparse:
+        method = "sparse_wall_termination"
+        # Agreement can raise a sparse jamb a little. It stays below a dense one.
+        confidence = float(np.clip(0.52 + 0.04 * (len(candidates) - 1) - spread / 0.06, 0.35, 0.62))
+    elif len(candidates) == 1 and methods and methods[0] == "wall_termination":
+        method = "wall_termination"
+        confidence = 0.80
+    elif len(candidates) == 1:
+        method = "single_frame_unobserved_interval"
+        confidence = 0.45
+    else:
+        method = "multi_frame_wall_termination"
+        confidence = float(np.clip(1.0 - spread / 0.06, 0.15, 0.95))
+    return {
+        "left": left,
+        "right": right,
+        "width": float(right - left),
+        "method": method,
+        "frames": int(len(candidates)),
+        "spread_m": round(spread, 4),
+        "confidence": round(confidence, 2),
+        "localization": localization,
+    }
+
+
+def openings_from_wall_frames(
+    frames: list[np.ndarray],
+    span: tuple[float, float] = (0.0, 4.0),
+    abs_floor: float = 0.012,
+) -> dict | None:
+    """Openings from per-frame wall profiles, aggregated before any voxel fuse.
+
+    Each array is the along-track coordinate of one camera position, already
+    in the same wall-local frame. The shipped LiDAR path does not call this.
+    fuse_lidar voxel-downsamples every frame into one cloud, and build_layout
+    only sees that cloud, so a real walk still loses the sub-voxel bracket.
+    """
+    candidates = []
+    methods = []
+    for along in frames:
+        along = np.asarray(along, dtype=float)
+        if len(along) < 10:
+            continue
+        height = np.full(along.shape, 1.0)
+        door = (height > 0.35) & (height < 1.65)
+        samples = along[door] if int(door.sum()) >= 10 else along
+        line = {
+            "runs": _support_runs(samples),
+            "along": along,
+            "height": height,
+            "sigma": 0.01,
+            "n": int(len(along)),
+        }
+        found = [op for op in _openings_on_line(line, span[0], span[1], span[1] - span[0], abs_floor) if op.kind == "door"]
+        if len(found) != 1:
+            continue
+        opening = found[0]
+        candidates.append((opening.along0, opening.along1, opening.sigma, opening.sigma))
+        methods.append(opening.method)
+    return aggregate_jambs(candidates, methods=methods)
+
+
+def extract_frame_wall_evidence(along: np.ndarray) -> np.ndarray:
+    """One frame of along-track samples, already in wall-local coordinates.
+
+    This does not voxel-merge the frame into the fused room cloud.
+    """
+    return np.asarray(along, dtype=float)
+
+
+def detect_opening_candidates_from_frame(
+    along: np.ndarray,
+    span: tuple[float, float] = (0.0, 4.0),
+    abs_floor: float = 0.012,
+) -> dict | None:
+    """Jamb candidate from one wall-local frame, including a sparse low-confidence path."""
+    return openings_from_wall_frames([extract_frame_wall_evidence(along)], span=span, abs_floor=abs_floor)
+
+
+def aggregate_opening_candidates(candidates: list[tuple], methods: list[str] | None = None) -> dict | None:
+    """Robust aggregate of per-frame brackets. Not a fused voxel grid."""
+    return aggregate_jambs(candidates, methods=methods)
+
+
+def detect_openings_multiframe(
+    frames: list[np.ndarray],
+    span: tuple[float, float] = (0.0, 4.0),
+    abs_floor: float = 0.012,
+) -> dict | None:
+    """Openings from per-frame wall profiles. The fused cloud is a separate input."""
+    return openings_from_wall_frames([extract_frame_wall_evidence(frame) for frame in frames], span=span, abs_floor=abs_floor)
+
+
+def _refined_width_ok(hist_width: float, width: float, sigma: float, sparse: bool) -> bool:
+    """Keep a door-sized gap. A dense midpoint may sit just outside the band.
+
+    The 5 cm bins already required a gap in [0.68, 1.20]. On a coarse grid
+    the jamb is the center of the unobserved interval, so that center can
+    fall a few centimetres outside the band while the bracket still covers
+    the gap. A sparse gap has no such bracket of repeated returns, so its
+    width has to land in the band on its own.
+    """
+    if 0.68 <= width <= 1.20:
+        return True
+    if sparse:
+        return False
+    return abs(width - hist_width) <= max(2.0 * sigma, 0.05)
+
+
 def _openings_on_line(line: dict, a0: float, a1: float, wall_len: float, abs_floor: float) -> list[Opening]:
     """Gaps in the along-wall support, flanked on both sides.
 
     A missing end of a wall is an unscanned corner, not a door. Both
     flanks have to be present. Width is conservative on purpose: a phantom
     opening counts the same as a miss. The histogram finds the gap; the
-    reported width uses the continuous jambs.
+    reported width uses the continuous jambs. Strong runs (>=3 hits) are
+    tried first. A separate path accepts one or two hits when neighboring
+    bins continue the wall, and labels that opening as sparse.
     """
-    runs = sorted(line["runs"])
-    if len(runs) < 2:
-        return []
-    openings = []
     along = line["along"]
     heights = line["height"]
-    # flank occupancy scale
-    for (a, b, _), (c, d, _) in zip(runs, runs[1:]):
-        gap0, gap1 = b, c
-        width = gap1 - gap0
-        flank_left = b - a
-        flank_right = d - c
-        if flank_left < 0.35 or flank_right < 0.35:
-            continue
-        if width < 0.68 or width > 1.20:
-            continue
-        # the gap must sit on the wall we are measuring, not past its ends
-        if gap0 < a0 - 0.05 or gap1 > a1 + 0.05:
-            continue
-        prof = _height_profile(heights, along, gap0, gap1)
-        # empty through the door band: very few mid-height returns
-        flank = _height_profile(heights, along, a, b)
-        if flank["mid"] > 20 and prof["mid"] > 0.25 * flank["mid"]:
-            continue
-        edge_l, edge_r, edge_sigma = _continuous_jambs(
-            along,
-            heights,
-            gap0,
-            gap1,
-            step_along=line.get("step_along"),
-            step_depth=line.get("step_depth"),
-        )
-        width = edge_r - edge_l
-        if width < 0.68 or width > 1.20:
-            continue
-        kind = "door"
-        sill = 0.0
-        head = None
-        if prof["low"] > prof["mid"] and prof["low"] > 8 and prof["high"] > 8:
-            kind = "window"
-            sill = 0.85 if prof["low"] > 8 else None
+    openings: list[Opening] = []
+
+    def consider(runs, sparse: bool) -> None:
+        for (a, b, _), (c, d, _) in zip(runs, runs[1:]):
+            gap0, gap1 = b, c
+            hist_width = gap1 - gap0
+            flank_left = b - a
+            flank_right = d - c
+            if flank_left < 0.35 or flank_right < 0.35:
+                continue
+            # The support bins are 5 cm, so the coarse gap can sit one bin
+            # outside the door band while the jambs themselves are inside it.
+            bin_m = 0.05
+            if hist_width < 0.68 - bin_m or hist_width > 1.20 + bin_m:
+                continue
+            coarse_off = hist_width < 0.68 or hist_width > 1.20
+            if gap0 < a0 - 0.05 or gap1 > a1 + 0.05:
+                continue
+            if any(min(gap1, op.along1) - max(gap0, op.along0) > 0.20 for op in openings):
+                continue
+            prof = _height_profile(heights, along, gap0, gap1)
+            flank = _height_profile(heights, along, a, b)
+            if flank["mid"] > 20 and prof["mid"] > 0.25 * flank["mid"]:
+                continue
+            if sparse:
+                # The strong-path fill test waits for 20 mid-height hits.
+                # A one-hit flank never reaches that, so the gap is checked
+                # directly. A few peeled specks can remain. A populated gap cannot.
+                gap_hits = int(np.sum((along > gap0 + 0.02) & (along < gap1 - 0.02)))
+                flank_hits = int(np.sum((along >= a) & (along <= b)))
+                if gap_hits >= 3 and gap_hits > 0.25 * max(flank_hits, 1):
+                    continue
+            edge_l, edge_r, edge_sigma = _continuous_jambs(
+                along,
+                heights,
+                gap0,
+                gap1,
+                step_along=line.get("step_along"),
+                step_depth=line.get("step_depth"),
+            )
+            width = edge_r - edge_l
+            if coarse_off:
+                if not (0.68 <= width <= 1.20):
+                    continue
+            elif not _refined_width_ok(hist_width, width, edge_sigma, sparse):
+                continue
+            kind = "door"
+            sill = 0.0
             head = None
-        sigma = max(edge_sigma, 0.005, abs_floor * 0.5)
-        openings.append(
-            Opening(kind=kind, width=float(width), sigma=float(sigma), along0=float(edge_l), along1=float(edge_r), sill=sill, head=head)
-        )
+            if prof["low"] > prof["mid"] and prof["low"] > 8 and prof["high"] > 8:
+                kind = "window"
+                sill = 0.85 if prof["low"] > 8 else None
+                head = None
+            sigma = max(edge_sigma, 0.005, abs_floor * 0.5)
+            openings.append(
+                Opening(
+                    kind=kind,
+                    width=float(width),
+                    sigma=float(sigma),
+                    along0=float(edge_l),
+                    along1=float(edge_r),
+                    sill=sill,
+                    head=head,
+                    method="sparse_wall_termination" if sparse else "wall_termination",
+                    confidence=0.52 if sparse else 0.80,
+                )
+            )
+
+    consider(sorted(line["runs"]), sparse=False)
+    door = (heights > 0.35) & (heights < 1.65)
+    samples = along[door] if int(door.sum()) >= 8 else along
+    consider(_consistent_sparse_runs(samples), sparse=True)
     return openings
 
 
@@ -796,6 +1036,8 @@ def layout_to_dict(layout: Layout, tier: str, xyz_for_area_sigma: float | None =
                         if op.head is None
                         else meas(op.head, max(op.sigma, 0.04), max(abs_floor, 0.04), rel_floor),
                         "observed_head": op.head is not None,
+                        "method": op.method,
+                        "confidence": op.confidence,
                     }
                 )
             height_m = None
