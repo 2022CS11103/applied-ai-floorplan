@@ -220,18 +220,30 @@ def _edge_supported(line: dict, a0: float, a1: float, frac: float = 0.30) -> boo
 
 
 def _drop_weak_partitions(lines: list[dict]) -> list[dict]:
-    """Keep the outer walls and any interior wall that is almost as solid.
+    """Keep outer walls and interior walls that are actually long.
 
-    A sofa or a counter produces a parallel ridge. It is weaker than the
-    wall behind it. Dropping it is what stops one room being drawn as three.
+    A sofa or a counter is a second ridge a few decimetres in front of the
+    wall. Those collapse onto the stronger ridge so one room is not drawn
+    as three. A real wall in a floor-biased scan can have a lower histogram
+    score than the wall the phone faced, and still have metres of support,
+    so score alone is not the cut.
     """
     if len(lines) <= 2:
         return lines
-    strongest = max(L["score"] for L in lines)
-    kept = [L for L in lines if L["score"] >= 0.55 * strongest and L["support_len"] >= 1.2]
+    ordered = sorted(lines, key=lambda L: L["pos"])
+    merged: list[dict] = []
+    for line in ordered:
+        if merged and abs(line["pos"] - merged[-1]["pos"]) < 0.50:
+            if line["score"] > merged[-1]["score"]:
+                merged[-1] = line
+        else:
+            merged.append(line)
+    if len(merged) <= 2:
+        return merged
+    strongest = max(L["score"] for L in merged)
+    kept = [L for L in merged if L["score"] >= 0.38 * strongest and L["support_len"] >= 1.35]
     if len(kept) < 2:
-        # fall back to the two strongest, which are the outer pair in a single room
-        kept = sorted(lines, key=lambda L: L["score"], reverse=True)[:2]
+        kept = sorted(merged, key=lambda L: L["score"], reverse=True)[:2]
         kept = sorted(kept, key=lambda L: L["pos"])
     return kept
 
